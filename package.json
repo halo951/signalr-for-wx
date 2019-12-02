@@ -1,27 +1,18 @@
 {
   "name": "signalr-for-wx",
-  "version": "0.1.5",
-  "description": ".NET Core SignalR client for wechat miniprogram.",
-  "author": "Microsoft - Halo copyed.",
-  "main": "dist/index.js",
-  "types": "typings/index.d.ts",
-  "miniprogram": "dist",
-  "keywords": [
-    "signalr",
-    "@aspnet/signalr",
-    "signalr 微信小程序实现",
-    "wx",
-    "miniprogram",
-    "signalr-for-wx"
-  ],
-  "scripts": {
-    "clean": "node node_modules/rimraf/bin.js ./dist & node node_modules/rimraf/bin.js ./types",
-    "build:wx": "npm run clean && tsc --outDir ./dist"
-  },
+  "version": "0.1.7",
+  "description": ".NET Core SignalR client for wechat miniprogram",
   "homepage": "https://github.com/a951055/signalr-for-wx",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/a951055/signalr-for-wx.git"
+  "author": "Microsoft",
+  "contributors": [
+    "Halo <1654403734@qq.com>"
+  ],
+  "repository": "https://github.com/a951055/signalr-for-wx",
+  "main": "./dist/index.js",
+  "jsnext:main": "./dist/index.js",
+  "typings": "./typings/index.d.ts",
+  "engines": {
+    "node": "*"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -35,5 +26,18 @@
   },
   "dependencies": {
     "eventsource": "^1.0.7"
-  }
+  },
+  "scripts": {
+    "clean": "node node_modules/rimraf/bin.js ./dist & node node_modules/rimraf/bin.js ./types",
+    "build:wx": "npm run clean && tsc --outDir ./dist"
+  },
+  "miniprogram": "dist",
+  "keywords": [
+    "signalr",
+    "@aspnet/signalr",
+    "signalr 微信小程序实现",
+    "wx",
+    "miniprogram",
+    "signalr-for-wx"
+  ]
 }
