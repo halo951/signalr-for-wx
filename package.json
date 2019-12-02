@@ -5,6 +5,7 @@
   "author": "Microsoft - Halo copyed.",
   "main": "./dist/index.js",
   "types": "./typings/index.d.ts",
+  "miniprogram": "./dist",
   "keywords": [
     "signalr",
     "@aspnet/signalr",
