@@ -22,22 +22,14 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 
 ### path manifest
 
- ┌
-
- ├ [./wx](./wx) 修改后的源码路径
-
- ├ ─ [./wx/wx-request](./wx/wx-request) 封装微信请求库
-
- ├
-
- ├ [./library](./library) 微信小程序 lib.d.ts 
-
- ├ [./src](./src) 原始源码路径, 但是现在没法编译了,因为改写了 tsrootpath.
-
- ├ [./dist](./dist) 编译后的js包, es 版本, 没其他的
- 
- ├ [./typings](./typings) 导出的 ts .d.ts
-
+ ┌\n
+ ├ [./wx](./wx) 修改后的源码路径\n
+ ├ ─ [./wx/wx-request](./wx/wx-request) 封装微信请求库\n
+ ├ \n
+ ├ [./library](./library) 微信小程序 lib.d.ts\n
+ ├ [./src](./src) 原始源码路径, 但是现在没法编译了,因为改写了 tsrootpath.\n
+ ├ [./dist](./dist) 编译后的js包, es 版本, 没其他的\n
+ ├ [./typings](./typings) 导出的 ts .d.ts\n
  └ 
 
 ## 使用
