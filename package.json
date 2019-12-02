@@ -1,6 +1,6 @@
 {
   "name": "signalr-for-wx",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": ".NET Core SignalR client for wechat miniprogram.",
   "author": "Microsoft - Halo copyed.",
   "main": "./dist/index.js",
