@@ -24,16 +24,16 @@ export class Request {
   constructor(config: RequestConfig = {}, logger?: ILogger) {
     // 写入配置
     if (wx) {
-      // custom wx request promise library.
-      this.setConfig(config);
       // Time: 继承 signalR logger. 日志统一维护
       this.logger = logger
         ? logger
         : {
-            log(logLevel: LogLevel, message: string) {
-              /* 屏蔽打印 */
-            }
-          };
+          log(logLevel: LogLevel, message: string) {
+            /* 屏蔽打印 */
+          }
+        };
+      // custom wx request promise library.
+      this.setConfig(config);
     } else {
       throw new Error("当前运行环境不是微信运行环境");
     }
@@ -85,7 +85,7 @@ export class Request {
     }
     // header 合并
     options.headers = Object.assign({}, options.config ? options.config.headers : {}, options.headers);
-    this.logger.log(LogLevel.Trace, `merge headers ${options.headers}`);
+    this.logger.log(LogLevel.Trace, `merge headers `, options.headers);
     // 移除微信封锁参数
     delete options.headers["Referer"];
     this.logger.log(LogLevel.Trace, `try delete headers Referer.`);
@@ -93,19 +93,19 @@ export class Request {
     options.responseType = options.responseType
       ? options.responseType
       : options.config
-      ? options.config.responseType
-      : ResponseType.TEXT;
+        ? options.config.responseType
+        : ResponseType.TEXT;
     this.logger.log(LogLevel.Trace, `checked responseType [${options.responseType}]`);
     // 执行请求调用链
     if (options.config && options.config.transformRequest) {
       this.logger.log(
         LogLevel.Trace,
-        `execute transform request list. -result \n ${JSON.stringify(options.config, null, 2)}`
+        `execute transform request list. -result\n`, options.config
       );
       options.config.transformRequest.forEach(fun => fun(options));
     }
     // debug print handled request options
-    this.logger.log(LogLevel.Debug, `handled request options \n${JSON.stringify(options)}`);
+    this.logger.log(LogLevel.Debug, `handled request options \n`, options);
   }
 
   /**
@@ -129,14 +129,14 @@ export class Request {
         if (result) {
           this.logger.log(
             LogLevel.Trace,
-            `execute transform request list. -result \n ${JSON.stringify(result, null, 2)}`
+            `execute transform request list. -result \n `, result
           );
           return result;
         }
       }
     }
     // debug print handled response context
-    this.logger.log(LogLevel.Debug, `handled response context \n ${JSON.stringify(response, null, 2)}`);
+    this.logger.log(LogLevel.Debug, `handled response context \n`, response);
     return Promise.resolve(response);
   }
 
@@ -151,7 +151,7 @@ export class Request {
    */
   executeRequest(options: RequestOption): Promise<ResponseOptions> {
     return new Promise((resolve, reject) => {
-      this.logger.log(LogLevel.Trace, `execute request -options \n ${JSON.stringify(options, null, 2)}`);
+      this.logger.log(LogLevel.Trace, `execute request -options \n`, options);
       // 合并 baseConfig
       options.config = options.config ? { ...this.config, ...options.config } : { ...this.config };
       if (this.checkAbout(options.config, reject)) return;
@@ -159,7 +159,7 @@ export class Request {
       this.handleRequestOptions(options);
       if (this.checkAbout(options.config, reject)) return;
       // print fixed options
-      this.logger.log(LogLevel.Debug, `fixed options \n ${JSON.stringify(options, null, 2)}`);
+      this.logger.log(LogLevel.Debug, `fixed options \n`, options);
       // execute request
       this.logger.log(LogLevel.Trace, `invoke wx.request`);
       let task = wx.request({
@@ -179,7 +179,7 @@ export class Request {
         })(),
         success: async (res: { data: string | any | ArrayBuffer; header: any; statusCode: number; errMsg: string }) => {
           if (this.checkAbout(options.config, reject)) return;
-          this.logger.log(LogLevel.Debug, `origin response context \n ${JSON.stringify(res, null, 2)}`);
+          this.logger.log(LogLevel.Debug, `origin response context \n`, res);
           let { data, header, statusCode, errMsg } = res;
           // 创建原始响应
           let responseOptions: ResponseOptions = {
@@ -193,7 +193,7 @@ export class Request {
           this.handleResponse(responseOptions)
             .then(res => {
               // print debug
-              this.logger.log(LogLevel.Debug, `handle response context is success. \n ${JSON.stringify(res, null, 2)}`);
+              this.logger.log(LogLevel.Debug, `handle response context is success. \n`, res);
               /**
                * check and cache cookie (if has) |
                * @description 这里因为 signalR的原因,内置了一个 cookies.js [library](https://github.com/jshttp/cookie/index.js)
@@ -205,7 +205,7 @@ export class Request {
             })
             .catch((res: ResponseOptions) => {
               // print log
-              this.logger.log(LogLevel.Error, `handle response context is fail. \n ${JSON.stringify(res, null, 2)}`);
+              this.logger.log(LogLevel.Error, `handle response context is fail. \n `, res);
               // ! 这里为了兼容 signalR的错误格式,抛出继承了HttpError异常.
               let httpError = new HttpError(res.errMsg, res.statusCode);
               // callback  - 合并后,返回,可以被认定为 继承 HttpError对象.

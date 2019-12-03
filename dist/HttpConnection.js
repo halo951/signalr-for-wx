@@ -38,15 +38,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 import { LogLevel } from "./ILogger";
 import { HttpTransportType, TransferFormat } from "./ITransport";
 import { LongPollingTransport } from "./LongPollingTransport";
-import { ServerSentEventsTransport } from "./ServerSentEventsTransport";
 import { Arg, createLogger } from "./Utils";
-import * as eventsource from "eventsource";
 import DefaultRequest from "./DefualtRequest";
 import { ResponseType } from "./wx-request/model/ResponseType";
 import { WxSocketTransport } from "./WxSocketTransport";
 var MAX_REDIRECTS = 100;
-// ! 删除原有的根据环境选择加载模块方式,修改为 直接赋值 指定的 模块
-var EventSourceModule = eventsource;
 var WxSocketModule = WxSocketTransport;
 /** @private */
 var HttpConnection = /** @class */ (function () {
@@ -60,13 +56,10 @@ var HttpConnection = /** @class */ (function () {
         this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
         options.logMessageContent = options.logMessageContent || false;
         // ! 修改 options 参数赋值方式
-        if (!options.EventSource) {
-            if (typeof EventSourceModule !== "undefined") {
-                options.EventSource = EventSourceModule;
-            }
-        }
         if (!options.WxSocket) {
-            if (typeof WxSocketModule !== "undefined") {
+            console.log("wx:", wx);
+            console.log("WxSocketModule:", WxSocketModule);
+            if (wx && WxSocketModule) {
                 options.WxSocket = WxSocketModule;
             }
         }
@@ -79,7 +72,7 @@ var HttpConnection = /** @class */ (function () {
     HttpConnection.prototype.start = function (transferFormat) {
         transferFormat = transferFormat || TransferFormat.Binary;
         Arg.isIn(transferFormat, TransferFormat, "transferFormat");
-        this.logger.log(LogLevel.Debug, "Starting connection with transfer format '" + TransferFormat[transferFormat] + "'.");
+        this.logger.log(LogLevel.Debug, "Starting connection with transfer format '" + TransferFormat[transferFormat] + "'.", TransferFormat);
         if (this.connectionState !== 2 /* Disconnected */) {
             return Promise.reject(new Error("Cannot start a connection that is not in the 'Disconnected' state."));
         }
@@ -140,9 +133,9 @@ var HttpConnection = /** @class */ (function () {
                     case 1:
                         _a.trys.push([1, 12, , 13]);
                         if (!this.options.skipNegotiation) return [3 /*break*/, 5];
-                        if (!(this.options.transport === HttpTransportType.WebSockets)) return [3 /*break*/, 3];
+                        if (!(this.options.transport === HttpTransportType.WxSocket)) return [3 /*break*/, 3];
                         // No need to add a connection ID in this case
-                        this.transport = this.constructTransport(HttpTransportType.WebSockets);
+                        this.transport = this.constructTransport(HttpTransportType.WxSocket);
                         // We should just call connect directly in this case.
                         // No fallback or negotiate in this case.
                         return [4 /*yield*/, this.transport.connect({
@@ -157,7 +150,7 @@ var HttpConnection = /** @class */ (function () {
                         // No fallback or negotiate in this case.
                         _a.sent();
                         return [3 /*break*/, 4];
-                    case 3: throw Error("Negotiation can only be skipped when using the WebSocket transport directly.");
+                    case 3: throw Error("Negotiation can only be skipped when using the WxSocket transport directly.");
                     case 4: return [3 /*break*/, 11];
                     case 5:
                         negotiateResponse = null;
@@ -222,7 +215,7 @@ var HttpConnection = /** @class */ (function () {
                         return [3 /*break*/, 13];
                     case 12:
                         e_2 = _a.sent();
-                        this.logger.log(LogLevel.Error, "Failed to start the connection: " + e_2);
+                        this.logger.log(LogLevel.Error, "Failed to start the connection: ", e_2);
                         this.connectionState = 2 /* Disconnected */;
                         this.transport = undefined;
                         throw e_2;
@@ -265,7 +258,7 @@ var HttpConnection = /** @class */ (function () {
                         return [2 /*return*/, JSON.parse(response.data)];
                     case 5:
                         e_3 = _b.sent();
-                        this.logger.log(LogLevel.Error, "Failed to complete negotiation with the server: " + e_3);
+                        this.logger.log(LogLevel.Error, "Failed to complete negotiation with the server: ", e_3);
                         throw e_3;
                     case 6: return [2 /*return*/];
                 }
@@ -317,6 +310,10 @@ var HttpConnection = /** @class */ (function () {
                         _a.label = 5;
                     case 5:
                         _a.trys.push([5, 7, , 8]);
+                        console.log({
+                            url: connectUrl,
+                            transferFormat: requestedTransferFormat
+                        });
                         return [4 /*yield*/, this.transport.connect({
                                 url: connectUrl,
                                 transferFormat: requestedTransferFormat
@@ -341,7 +338,7 @@ var HttpConnection = /** @class */ (function () {
     };
     HttpConnection.prototype.constructTransport = function (transport) {
         switch (transport) {
-            case HttpTransportType.WebSockets:
+            case HttpTransportType.WxSocket:
                 if (!this.options.WxSocket) {
                     throw new Error("'WebSocket' is not supported in your environment.");
                 }
@@ -364,11 +361,6 @@ var HttpConnection = /** @class */ (function () {
                         max: 3
                     }
                 });
-            case HttpTransportType.ServerSentEvents:
-                if (!this.options.EventSource) {
-                    throw new Error("'EventSource' is not supported in your environment.");
-                }
-                return new ServerSentEventsTransport(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false, this.options.EventSource);
             case HttpTransportType.LongPolling:
                 return new LongPollingTransport(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
             default:
@@ -377,6 +369,7 @@ var HttpConnection = /** @class */ (function () {
     };
     HttpConnection.prototype.resolveTransport = function (endpoint, requestedTransport, requestedTransferFormat) {
         var transport = HttpTransportType[endpoint.transport];
+        this.logger.log(LogLevel.Trace, "check transport :HttpTransportType[endpoint.transport]", HttpTransportType, endpoint.transport, endpoint);
         if (transport === null || transport === undefined) {
             this.logger.log(LogLevel.Debug, "Skipping transport '" + endpoint.transport + "' because it is not supported by this client.");
         }
@@ -384,8 +377,7 @@ var HttpConnection = /** @class */ (function () {
             var transferFormats = endpoint.transferFormats.map(function (s) { return TransferFormat[s]; });
             if (transportMatches(requestedTransport, transport)) {
                 if (transferFormats.indexOf(requestedTransferFormat) >= 0) {
-                    if ((transport === HttpTransportType.WebSockets && !this.options.WxSocket) ||
-                        (transport === HttpTransportType.ServerSentEvents && !this.options.EventSource)) {
+                    if ((transport === HttpTransportType.WxSocket && !this.options.WxSocket)) {
                         this.logger.log(LogLevel.Debug, "Skipping transport '" + HttpTransportType[transport] + "' because it is not supported in your environment.'");
                     }
                     else {

@@ -64,7 +64,7 @@ export class HttpConnection implements IConnection {
     options.logMessageContent = options.logMessageContent || false;
     // ! 修改 options 参数赋值方式
     if (!options.WxSocket) {
-      if (typeof WxSocketModule !== "undefined") {
+      if (wx && WxSocketModule) {
         options.WxSocket = WxSocketModule;
       }
     }
@@ -83,7 +83,7 @@ export class HttpConnection implements IConnection {
 
     Arg.isIn(transferFormat, TransferFormat, "transferFormat");
 
-    this.logger.log(LogLevel.Debug, `Starting connection with transfer format '${TransferFormat[transferFormat]}'.`);
+    this.logger.log(LogLevel.Debug, `Starting connection with transfer format '${TransferFormat[transferFormat]}'.`, TransferFormat);
 
     if (this.connectionState !== ConnectionState.Disconnected) {
       return Promise.reject(new Error("Cannot start a connection that is not in the 'Disconnected' state."));
@@ -145,7 +145,7 @@ export class HttpConnection implements IConnection {
             transferFormat
           });
         } else {
-          throw Error("Negotiation can only be skipped when using the WebSocket transport directly.");
+          throw Error("Negotiation can only be skipped when using the WxSocket transport directly.");
         }
       } else {
         let negotiateResponse: INegotiateResponse | null = null;
@@ -164,7 +164,7 @@ export class HttpConnection implements IConnection {
 
           if ((negotiateResponse as any).ProtocolVersion) {
             throw Error(
-              "Detected a connection attempt to an ASP.NET SignalR Server. This client only supports connecting to an ASP.NET Core SignalR Server. See https://aka.ms/signalr-core-differences for details."
+              "检测到尝试连接到一个 非 ASP.NET Core 服务器。此客户端仅支持连接到ASP.NET Core 服务器。. See https://aka.ms/signalr-core-differences for details."
             );
           }
 
@@ -183,9 +183,8 @@ export class HttpConnection implements IConnection {
         } while (negotiateResponse.url && redirects < MAX_REDIRECTS);
 
         if (redirects === MAX_REDIRECTS && negotiateResponse.url) {
-          throw Error("Negotiate redirection limit exceeded.");
+          throw Error("Negotiate redirection limit exceeded. -fy : 超出协商重定向限制");
         }
-
         await this.createTransport(url, this.options.transport, negotiateResponse, transferFormat);
       }
 
@@ -193,14 +192,14 @@ export class HttpConnection implements IConnection {
         this.features.inherentKeepAlive = true;
       }
 
-      this.transport!.onreceive = this.onreceive;
-      this.transport!.onclose = e => this.stopConnection(e);
-
+      this.transport.onreceive = this.onreceive;
+      this.transport.onclose = e => this.stopConnection(e);
       // only change the state if we were connecting to not overwrite
       // the state if the connection is already marked as Disconnected
       this.changeState(ConnectionState.Connecting, ConnectionState.Connected);
+      return;
     } catch (e) {
-      this.logger.log(LogLevel.Error, "Failed to start the connection: " + e);
+      this.logger.log(LogLevel.Error, "Failed to start the connection: ", e);
       this.connectionState = ConnectionState.Disconnected;
       this.transport = undefined;
       throw e;
@@ -236,7 +235,7 @@ export class HttpConnection implements IConnection {
 
       return JSON.parse(response.data as string) as INegotiateResponse;
     } catch (e) {
-      this.logger.log(LogLevel.Error, "Failed to complete negotiation with the server: " + e);
+      this.logger.log(LogLevel.Error, "Failed to complete negotiation with the server: ", e);
       throw e;
     }
   }
@@ -280,14 +279,14 @@ export class HttpConnection implements IConnection {
           connectUrl = this.createConnectUrl(url, negotiateResponse.connectionId);
         }
         try {
-          await this.transport!.connect({
+          await this.transport.connect({
             url: connectUrl,
             transferFormat: requestedTransferFormat
           });
           this.changeState(ConnectionState.Connecting, ConnectionState.Connected);
           return;
         } catch (ex) {
-          this.logger.log(LogLevel.Error, `Failed to start the transport '${HttpTransportType[transport]}': ${ex}`);
+          this.logger.log(LogLevel.Error, `Failed to start the transport '${HttpTransportType[transport]}':`, ex);
           this.connectionState = ConnectionState.Disconnected;
           negotiateResponse.connectionId = undefined;
         }
@@ -322,18 +321,6 @@ export class HttpConnection implements IConnection {
             max: 3
           }
         });
-      case HttpTransportType.ServerSentEvents:
-        if (!this.options.EventSource) {
-          throw new Error("'EventSource' 微信环境下不被支持.");
-        }
-        return;
-      // return new ServerSentEventsTransport(
-      //   this.request,
-      //   this.accessTokenFactory,
-      //   this.logger,
-      //   this.options.logMessageContent || false,
-      //   null
-      // );
       case HttpTransportType.LongPolling:
         return new LongPollingTransport(
           this.request,

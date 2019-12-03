@@ -116,7 +116,7 @@ var HubConnection = /** @class */ (function () {
                         return [4 /*yield*/, this.sendMessage(this.handshakeProtocol.writeHandshakeRequest(handshakeRequest))];
                     case 2:
                         _a.sent();
-                        this.logger.log(LogLevel.Information, "Using HubProtocol '" + this.protocol.name + "'.");
+                        this.logger.log(LogLevel.Information, "Using HubProtocol '" + this.protocol.name + "'.", this.protocol);
                         // defensively cleanup timeout in case we receive a message from the server before we finish start
                         this.cleanupTimeout();
                         this.resetTimeoutPeriod();
@@ -346,7 +346,7 @@ var HubConnection = /** @class */ (function () {
                         this.connection.stop(message.error ? new Error("Server returned an error on close: " + message.error) : undefined);
                         break;
                     default:
-                        this.logger.log(LogLevel.Warning, "Invalid message type: " + message.type + ".");
+                        this.logger.log(LogLevel.Warning, "Invalid message type: " + message.type + ".", message);
                         break;
                 }
             }

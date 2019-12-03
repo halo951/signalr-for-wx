@@ -118,7 +118,7 @@ export class WxSocketTransport implements ITransport {
 
     return new Promise<WechatMiniprogram.GeneralCallbackResult>((resolve, reject) => {
       // 忽略url修正,因为传入错误url的话,将直接抛出异常
-      // options.url = options.url.replace(/^http/, "ws");
+      options.url = options.url.replace(/^http/, "ws");
       // 这里执行的是连接操socket的逻辑
       let socketTask: WechatMiniprogram.SocketTask | undefined;
       // 1.7.0 及以上版本，最多可以同时存在 5 个 WebSocket 连接, 以下版本，一个小程序同时只能有一个 WebSocket 连接，如果当前已存在一个 WebSocket 连接，会自动关闭该连接，并重新创建一个 WebSocket 连接
@@ -139,23 +139,29 @@ export class WxSocketTransport implements ITransport {
       if (!socketTask) {
         socketTask = wx.connectSocket({
           // 传入 两个默认的 回调,当然也可以在 options 里面覆盖 使用自定义回调.
-          success: (res: WechatMiniprogram.GeneralCallbackResult) => resolve(res),
-          fail: (res: WechatMiniprogram.GeneralCallbackResult) => reject(res),
+          success: (res: WechatMiniprogram.GeneralCallbackResult) => {
+            this.logger.log(LogLevel.Debug, "wx.connectSocket():success");
+          },
+          fail: (res: WechatMiniprogram.GeneralCallbackResult) => {
+            this.logger.log(LogLevel.Debug, "wx.connectSocket():fail");
+            reject(res);
+          },
           ...options
         });
       }
       // ! 因为小程序两种协议都支持,所以不需要指定特定的 binaryType
       /** 连接成功处理 */
       socketTask.onOpen(async (result: WechatMiniprogram.OnOpenCallbackResult) => {
+        this.logger.log(LogLevel.Information, `websocket连接建立  ws api:[${options.url}]`);
+        this.logger.log(LogLevel.Debug, `wx.connectSocket success message:`, result);
         WxSocketTransport.count += 1;
         this.readyState = WxSocketReadyState.OPEN;
-        this.logger.log(LogLevel.Debug, `wx.connectSocket success message:${JSON.stringify(result, null, 2)}`);
-        this.logger.log(LogLevel.Information, `WebSocket connected to ${options.url}.`);
         this.socketTask = socketTask;
         // 等待回调执行完成后,再重新队列中消息
         await resolve();
         // 发送在连接建立前发送的消息
         if (this.enableMessageQueue && this.messageQueue.length > 0) {
+          this.logger.log(LogLevel.Debug, `推送离线消息`)
           // 队列推送
           for (let msg of this.messageQueue) await this.send(msg);
         }
@@ -179,7 +185,7 @@ export class WxSocketTransport implements ITransport {
       socketTask.onMessage((res: WechatMiniprogram.SocketTaskOnMessageCallbackResult) => {
         this.logger.log(
           LogLevel.Trace,
-          `(WebSockets transport) data received. ${getDataDetail(res.data, this.logMessageContent)}.`
+          `(WebSockets transport) data received.`, getDataDetail(res.data, this.logMessageContent)
         );
         if (this.onreceive) {
           this.onreceive(res.data);
@@ -203,10 +209,15 @@ export class WxSocketTransport implements ITransport {
     if (this.socketTask && this.readyState === WxSocketReadyState.OPEN) {
       this.logger.log(
         LogLevel.Trace,
-        `(WebSockets transport) sending data. ${getDataDetail(data, this.logMessageContent)}.`
+        `[WxSocket] 推送数据.`, getDataDetail(data, this.logMessageContent)
       );
-      this.socketTask.send(data);
-      return Promise.resolve();
+      return new Promise((resolve, reject) => {
+        this.socketTask.send({
+          data,
+          success: () => resolve(),
+          fail: () => reject()
+        });
+      });
     } else if (this.enableMessageQueue) {
       this.messageQueue.push(data);
       let loop = 0;
@@ -221,7 +232,7 @@ export class WxSocketTransport implements ITransport {
         }
       }
       // 回调
-      return Promise.resolve();
+      return this.send(data);
     } else {
       return Promise.reject({
         errMsg: "WebSocket is not in the OPEN state"

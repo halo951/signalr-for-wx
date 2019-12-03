@@ -10,9 +10,6 @@ export class NullLogger implements ILogger {
     public static instance: ILogger = new NullLogger();
 
     private constructor() { }
+    log(logLevel: LogLevel, ...msg: any): void { }
 
-    /** @inheritDoc */
-    // tslint:disable-next-line
-    public log(_logLevel: LogLevel, _message: string): void {
-    }
 }

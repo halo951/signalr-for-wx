@@ -63,8 +63,6 @@ var Request = /** @class */ (function () {
         if (config === void 0) { config = {}; }
         // 写入配置
         if (wx) {
-            // custom wx request promise library.
-            this.setConfig(config);
             // Time: 继承 signalR logger. 日志统一维护
             this.logger = logger
                 ? logger
@@ -73,6 +71,8 @@ var Request = /** @class */ (function () {
                         /* 屏蔽打印 */
                     }
                 };
+            // custom wx request promise library.
+            this.setConfig(config);
         }
         else {
             throw new Error("当前运行环境不是微信运行环境");
@@ -113,7 +113,7 @@ var Request = /** @class */ (function () {
         }
         // header 合并
         options.headers = Object.assign({}, options.config ? options.config.headers : {}, options.headers);
-        this.logger.log(LogLevel.Trace, "merge headers " + options.headers);
+        this.logger.log(LogLevel.Trace, "merge headers ", options.headers);
         // 移除微信封锁参数
         delete options.headers["Referer"];
         this.logger.log(LogLevel.Trace, "try delete headers Referer.");
@@ -126,11 +126,11 @@ var Request = /** @class */ (function () {
         this.logger.log(LogLevel.Trace, "checked responseType [" + options.responseType + "]");
         // 执行请求调用链
         if (options.config && options.config.transformRequest) {
-            this.logger.log(LogLevel.Trace, "execute transform request list. -result \n " + JSON.stringify(options.config, null, 2));
+            this.logger.log(LogLevel.Trace, "execute transform request list. -result\n", options.config);
             options.config.transformRequest.forEach(function (fun) { return fun(options); });
         }
         // debug print handled request options
-        this.logger.log(LogLevel.Debug, "handled request options \n" + JSON.stringify(options));
+        this.logger.log(LogLevel.Debug, "handled request options \n", options);
     };
     /**
      * 验证响应结果,执行回调
@@ -150,13 +150,13 @@ var Request = /** @class */ (function () {
                 var result = fun(response);
                 // 这个异常处理步骤未验证.
                 if (result) {
-                    this.logger.log(LogLevel.Trace, "execute transform request list. -result \n " + JSON.stringify(result, null, 2));
+                    this.logger.log(LogLevel.Trace, "execute transform request list. -result \n ", result);
                     return result;
                 }
             }
         }
         // debug print handled response context
-        this.logger.log(LogLevel.Debug, "handled response context \n " + JSON.stringify(response, null, 2));
+        this.logger.log(LogLevel.Debug, "handled response context \n", response);
         return Promise.resolve(response);
     };
     /**
@@ -171,7 +171,7 @@ var Request = /** @class */ (function () {
     Request.prototype.executeRequest = function (options) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this.logger.log(LogLevel.Trace, "execute request -options \n " + JSON.stringify(options, null, 2));
+            _this.logger.log(LogLevel.Trace, "execute request -options \n", options);
             // 合并 baseConfig
             options.config = options.config ? __assign({}, _this.config, options.config) : __assign({}, _this.config);
             if (_this.checkAbout(options.config, reject))
@@ -181,7 +181,7 @@ var Request = /** @class */ (function () {
             if (_this.checkAbout(options.config, reject))
                 return;
             // print fixed options
-            _this.logger.log(LogLevel.Debug, "fixed options \n " + JSON.stringify(options, null, 2));
+            _this.logger.log(LogLevel.Debug, "fixed options \n", options);
             // execute request
             _this.logger.log(LogLevel.Trace, "invoke wx.request");
             var task = wx.request({
@@ -205,7 +205,7 @@ var Request = /** @class */ (function () {
                     return __generator(this, function (_a) {
                         if (this.checkAbout(options.config, reject))
                             return [2 /*return*/];
-                        this.logger.log(LogLevel.Debug, "origin response context \n " + JSON.stringify(res, null, 2));
+                        this.logger.log(LogLevel.Debug, "origin response context \n", res);
                         data = res.data, header = res.header, statusCode = res.statusCode, errMsg = res.errMsg;
                         responseOptions = {
                             data: data,
@@ -218,7 +218,7 @@ var Request = /** @class */ (function () {
                         this.handleResponse(responseOptions)
                             .then(function (res) {
                             // print debug
-                            _this.logger.log(LogLevel.Debug, "handle response context is success. \n " + JSON.stringify(res, null, 2));
+                            _this.logger.log(LogLevel.Debug, "handle response context is success. \n", res);
                             /**
                              * check and cache cookie (if has) |
                              * @description 这里因为 signalR的原因,内置了一个 cookies.js [library](https://github.com/jshttp/cookie/index.js)
@@ -231,7 +231,7 @@ var Request = /** @class */ (function () {
                         })
                             .catch(function (res) {
                             // print log
-                            _this.logger.log(LogLevel.Error, "handle response context is fail. \n " + JSON.stringify(res, null, 2));
+                            _this.logger.log(LogLevel.Error, "handle response context is fail. \n ", res);
                             // ! 这里为了兼容 signalR的错误格式,抛出继承了HttpError异常.
                             var httpError = new HttpError(res.errMsg, res.statusCode);
                             // callback  - 合并后,返回,可以被认定为 继承 HttpError对象.

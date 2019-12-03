@@ -2,6 +2,7 @@
 // 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 
 //这些值被设计为与ASP.NET日志级别匹配，因为这是我们在这里模拟的模式。
+
 /**
  * 指示日志消息的严重性。
  * 日志级别按严重性递增的顺序排列。所以“Debug”比“Trace”等更严重。
@@ -21,7 +22,7 @@ export enum LogLevel {
     /** 严重错误. */
     Critical = 5,
     /** 最高日志级别。在配置日志记录以指示不应发出日志消息时使用. */
-    None = 6,
+    None = 6
 }
 
 /** logger 抽象类 */
@@ -31,5 +32,5 @@ export interface ILogger {
      * @param {LogLevel} logLevel The severity level of the message.
      * @param {string} message The message.
      */
-    log(logLevel: LogLevel, message: string): void;
+    log(...msg: LogLevel | any): void;
 }

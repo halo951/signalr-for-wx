@@ -8,8 +8,6 @@ export enum HttpTransportType {
   None = 0,
   /**指定WebSocket传输。*/
   WebSockets = 1,
-  /**指定服务器发送的事件传输。*/
-  ServerSentEvents = 2,
   /**指定长轮询传输。*/
   LongPolling = 4
 }

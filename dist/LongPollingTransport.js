@@ -339,7 +339,7 @@ var LongPollingTransport = /** @class */ (function () {
                             })];
                     case 5:
                         e_2 = _a.sent();
-                        this.logger.log(LogLevel.Error, "(LongPolling transport) Stop error." + e_2);
+                        this.logger.log(LogLevel.Error, "(LongPolling transport) Stop error.", e_2);
                         return [2 /*return*/, Promise.reject({
                                 errMsg: "stop fail"
                             })];

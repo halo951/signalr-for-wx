@@ -130,7 +130,7 @@ export class HubConnection {
 
     await this.sendMessage(this.handshakeProtocol.writeHandshakeRequest(handshakeRequest));
 
-    this.logger.log(LogLevel.Information, `Using HubProtocol '${this.protocol.name}'.`);
+    this.logger.log(LogLevel.Information, `Using HubProtocol '${this.protocol.name}'.`, this.protocol);
 
     // defensively cleanup timeout in case we receive a message from the server before we finish start
     this.cleanupTimeout();
@@ -388,7 +388,7 @@ export class HubConnection {
 
             break;
           default:
-            this.logger.log(LogLevel.Warning, `Invalid message type: ${message.type}.`);
+            this.logger.log(LogLevel.Warning, `Invalid message type: ${message.type}.`, message);
             break;
         }
       }

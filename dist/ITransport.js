@@ -7,9 +7,7 @@ export var HttpTransportType;
     /**未指定传输首选项。*/
     HttpTransportType[HttpTransportType["None"] = 0] = "None";
     /**指定WebSocket传输。*/
-    HttpTransportType[HttpTransportType["WebSockets"] = 1] = "WebSockets";
-    /**指定服务器发送的事件传输。*/
-    HttpTransportType[HttpTransportType["ServerSentEvents"] = 2] = "ServerSentEvents";
+    HttpTransportType[HttpTransportType["WxSocket"] = 1] = "WxSocket";
     /**指定长轮询传输。*/
     HttpTransportType[HttpTransportType["LongPolling"] = 4] = "LongPolling";
 })(HttpTransportType || (HttpTransportType = {}));

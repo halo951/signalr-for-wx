@@ -81,7 +81,13 @@ var Arg = /** @class */ (function () {
             throw new Error("Url is undefined.");
         }
         else if (!/^(ws|wws):\/\//.test(url)) {
+            if (/^http/.test(url)) {
+                return url.replace(/^http/, "wx");
+            }
             throw new Error("error: instantiation [url](" + url + ") not supported by wechat miniprogram.");
+        }
+        else {
+            return url;
         }
     };
     return Arg;
@@ -272,22 +278,34 @@ var ConsoleLogger = /** @class */ (function () {
      * @param {string} message
      * @memberof ConsoleLogger
      */
-    ConsoleLogger.prototype.log = function (logLevel, message) {
+    ConsoleLogger.prototype.log = function () {
+        var msg = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            msg[_i] = arguments[_i];
+        }
+        var logLevel = LogLevel.Information;
+        for (var _a = 0, _b = arguments; _a < _b.length; _a++) {
+            var ll = _b[_a];
+            if (Object.values(LogLevel).indexOf(ll) != -1) {
+                logLevel = ll;
+                break;
+            }
+        }
         if (logLevel >= this.minimumLogLevel) {
             switch (logLevel) {
                 case LogLevel.Critical:
                 case LogLevel.Error:
-                    console.error("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + ": " + message);
+                    console.error("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
                     break;
                 case LogLevel.Warning:
-                    console.warn("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + ": " + message);
+                    console.warn("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
                     break;
                 case LogLevel.Information:
-                    console.info("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + ": " + message);
+                    console.info("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
                     break;
                 default:
                     // console.debug only goes to attached debuggers in Node, so we use console.log for Trace and Debug
-                    console.log("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + ": " + message);
+                    console.log("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
                     break;
             }
         }

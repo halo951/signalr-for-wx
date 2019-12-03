@@ -1,7 +1,7 @@
 import { Request } from "./wx-request/index";
-import { RequestMethod, ResponseType } from "wx";
 import { RequestConfig } from "./wx-request/model/RequestConfig";
-import { ILogger } from "./ILogger";
+import { ILogger, LogLevel } from "./ILogger";
+import { RequestMethod, ResponseType } from "./wx-request/model";
 /**
  * 生成默认请求库
  *
@@ -11,6 +11,13 @@ import { ILogger } from "./ILogger";
 export default class DefaultRequest extends Request {
   constructor(config: RequestConfig, logger: ILogger) {
     super();
+    this.logger = logger
+      ? logger
+      : {
+        log(logLevel: LogLevel, message: string) {
+          /* 屏蔽打印 */
+        }
+      };
     // default config
     this.setConfig({
       about: false,
@@ -23,6 +30,5 @@ export default class DefaultRequest extends Request {
       transformResponse: [],
       ...config
     });
-    this.logger = logger;
   }
 }

@@ -143,7 +143,7 @@ var WxSocketTransport = /** @class */ (function () {
                                         case 0:
                                             WxSocketTransport.count += 1;
                                             this.readyState = WxSocketReadyState.OPEN;
-                                            this.logger.log(LogLevel.Debug, "wx.connectSocket success message:" + JSON.stringify(result, null, 2));
+                                            this.logger.log(LogLevel.Debug, "wx.connectSocket success message:", result);
                                             this.logger.log(LogLevel.Information, "WebSocket connected to " + options.url + ".");
                                             this.socketTask = socketTask;
                                             // 等待回调执行完成后,再重新队列中消息
@@ -186,7 +186,7 @@ var WxSocketTransport = /** @class */ (function () {
                             });
                             /** 接收到消息处理 */
                             socketTask.onMessage(function (res) {
-                                _this.logger.log(LogLevel.Trace, "(WebSockets transport) data received. " + getDataDetail(res.data, _this.logMessageContent) + ".");
+                                _this.logger.log(LogLevel.Trace, "(WebSockets transport) data received.", getDataDetail(res.data, _this.logMessageContent));
                                 if (_this.onreceive) {
                                     _this.onreceive(res.data);
                                 }
@@ -216,7 +216,7 @@ var WxSocketTransport = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         if (!(this.socketTask && this.readyState === WxSocketReadyState.OPEN)) return [3 /*break*/, 1];
-                        this.logger.log(LogLevel.Trace, "(WebSockets transport) sending data. " + getDataDetail(data, this.logMessageContent) + ".");
+                        this.logger.log(LogLevel.Trace, "(WebSockets transport) sending data.", getDataDetail(data, this.logMessageContent));
                         this.socketTask.send(data);
                         return [2 /*return*/, Promise.resolve()];
                     case 1:

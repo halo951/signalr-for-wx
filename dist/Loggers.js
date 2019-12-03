@@ -4,9 +4,11 @@
 var NullLogger = /** @class */ (function () {
     function NullLogger() {
     }
-    /** @inheritDoc */
-    // tslint:disable-next-line
-    NullLogger.prototype.log = function (_logLevel, _message) {
+    NullLogger.prototype.log = function (logLevel) {
+        var msg = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            msg[_i - 1] = arguments[_i];
+        }
     };
     /** The singleton instance of the {@link @aspnet/signalr.NullLogger}. */
     NullLogger.instance = new NullLogger();

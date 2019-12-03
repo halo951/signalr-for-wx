@@ -23,7 +23,7 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 import { Request } from "./wx-request/index";
-import { RequestMethod, ResponseType } from "wx";
+import { RequestMethod, ResponseType } from "./wx-request/model";
 /**
  * 生成默认请求库
  *
@@ -34,9 +34,15 @@ var DefaultRequest = /** @class */ (function (_super) {
     __extends(DefaultRequest, _super);
     function DefaultRequest(config, logger) {
         var _this = _super.call(this) || this;
+        _this.logger = logger
+            ? logger
+            : {
+                log: function (logLevel, message) {
+                    /* 屏蔽打印 */
+                }
+            };
         // default config
         _this.setConfig(__assign({ about: false, forceEnableHttps: false, headers: {}, method: RequestMethod.GET, responseEncoding: ResponseType.JSON, timeout: 2 * 60 * 1000, transformRequest: [], transformResponse: [] }, config));
-        _this.logger = logger;
         return _this;
     }
     return DefaultRequest;

@@ -312,7 +312,7 @@ export class LongPollingTransport implements ITransport {
         errMsg: "stop success"
       });
     } catch (e) {
-      this.logger.log(LogLevel.Error, `(LongPolling transport) Stop error.${e}`);
+      this.logger.log(LogLevel.Error, `(LongPolling transport) Stop error.`, e);
       return Promise.reject({
         errMsg: "stop fail"
       });
