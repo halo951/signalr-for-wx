@@ -19,18 +19,17 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 7.  加上了**山寨版**的中文注释
 8.  重写后的 about() 方法支持的不太完善.因为不清楚 wx.requestTask 运行机制,仅能在`请求前`,`获得响应后`,`headers变化时`,判断是否需要中断请求
 
-
 ### path manifest
 
- ┌\n
- ├ [./wx](./wx) 修改后的源码路径\n
- ├ ─ [./wx/wx-request](./wx/wx-request) 封装微信请求库\n
- ├ \n
- ├ [./library](./library) 微信小程序 lib.d.ts\n
- ├ [./src](./src) 原始源码路径, 但是现在没法编译了,因为改写了 tsrootpath.\n
- ├ [./dist](./dist) 编译后的js包, es 版本, 没其他的\n
- ├ [./typings](./typings) 导出的 ts .d.ts\n
- └ 
+┌\n
+├ [./wx](./wx) 修改后的源码路径\n
+├ ─ [./wx/wx-request](./wx/wx-request) 封装微信请求库\n
+├ \n
+├ [./library](./library) 微信小程序 lib.d.ts\n
+├ [./src](./src) 原始源码路径, 但是现在没法编译了,因为改写了 tsrootpath.\n
+├ [./dist](./dist) 编译后的 js 包, es 版本, 没其他的\n
+├ [./typings](./typings) 导出的 ts .d.ts\n
+└
 
 ## 使用
 
@@ -44,10 +43,16 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 // import signalr
 import SignalR from "signalr-for-wx";
 
-// instantiate client
-let connection = new SignalR.HubConnectionBuilder()
-    .withUrl("/socket-api-url")
-    .build();
+ // 实际使用按照 signalR官方参数使用就行,逻辑没动,就改了 socket,request 实现方式
+let connection = new signalR.HubConnectionBuilder().withUrl("http://192.168.123.155:21021/signalr-answer").build();
+connection.on("CallBack", function(data) {
+    console.log(data);
+});
+connection.start().then(function() {
+    connection.invoke("Sayhello").then(function(data) {
+      console.log(data);
+  });
+});
 
 // connect socket
 
