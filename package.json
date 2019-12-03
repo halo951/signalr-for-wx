@@ -24,9 +24,7 @@
     "request": "^2.88.0",
     "rimraf": "^3.0.0"
   },
-  "dependencies": {
-    "eventsource": "^1.0.7"
-  },
+  "dependencies": {},
   "scripts": {
     "clean": "node node_modules/rimraf/bin.js ./dist & node node_modules/rimraf/bin.js ./types",
     "build:wx": "npm run clean && tsc --outDir ./dist"

@@ -3,7 +3,6 @@
 
 import { ILogger, LogLevel } from "./ILogger";
 import { HttpTransportType, ITransport } from "./ITransport";
-import { EventSourceConstructor } from "./Polyfills";
 import { Request } from "./wx-request/index";
 import { WxSocketTransport } from "./WxSocketTransport";
 
@@ -69,10 +68,9 @@ export interface IHttpConnectionOptions {
 
   // Used for unit testing and code spelunkers
   /**
-   * A constructor that can be used to create an EventSource.
-   * @internal
+   * EventSource 微信环境不支持
    */
-  EventSource?: EventSourceConstructor;
+  EventSource?: any;
   /**
    * ! 自定义解析url方法,用于兼容 signalr 默认使用 <a href> 解析非全路径问题
    */

@@ -6,9 +6,7 @@ import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
 import { ILogger, LogLevel } from "./ILogger";
 import { HttpTransportType, ITransport, TransferFormat } from "./ITransport";
 import { LongPollingTransport } from "./LongPollingTransport";
-import { ServerSentEventsTransport } from "./ServerSentEventsTransport";
 import { Arg, createLogger } from "./Utils";
-import * as eventsource from "eventsource";
 import { Request } from "./wx-request/index";
 import DefaultRequest from "./DefualtRequest";
 import { ResponseType } from "./wx-request/model/ResponseType";
@@ -37,8 +35,6 @@ export interface IAvailableTransport {
 }
 
 const MAX_REDIRECTS = 100;
-// ! 删除原有的根据环境选择加载模块方式,修改为 直接赋值 指定的 模块
-let EventSourceModule: any = eventsource;
 let WxSocketModule: any = WxSocketTransport;
 
 /** @private */
@@ -67,11 +63,6 @@ export class HttpConnection implements IConnection {
     this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
     options.logMessageContent = options.logMessageContent || false;
     // ! 修改 options 参数赋值方式
-    if (!options.EventSource) {
-      if (typeof EventSourceModule !== "undefined") {
-        options.EventSource = EventSourceModule;
-      }
-    }
     if (!options.WxSocket) {
       if (typeof WxSocketModule !== "undefined") {
         options.WxSocket = WxSocketModule;
@@ -333,15 +324,16 @@ export class HttpConnection implements IConnection {
         });
       case HttpTransportType.ServerSentEvents:
         if (!this.options.EventSource) {
-          throw new Error("'EventSource' is not supported in your environment.");
+          throw new Error("'EventSource' 微信环境下不被支持.");
         }
-        return new ServerSentEventsTransport(
-          this.request,
-          this.accessTokenFactory,
-          this.logger,
-          this.options.logMessageContent || false,
-          this.options.EventSource
-        );
+        return;
+      // return new ServerSentEventsTransport(
+      //   this.request,
+      //   this.accessTokenFactory,
+      //   this.logger,
+      //   this.options.logMessageContent || false,
+      //   null
+      // );
       case HttpTransportType.LongPolling:
         return new LongPollingTransport(
           this.request,
@@ -369,10 +361,7 @@ export class HttpConnection implements IConnection {
       const transferFormats = endpoint.transferFormats.map(s => TransferFormat[s]);
       if (transportMatches(requestedTransport, transport)) {
         if (transferFormats.indexOf(requestedTransferFormat) >= 0) {
-          if (
-            (transport === HttpTransportType.WebSockets && !this.options.WxSocket) ||
-            (transport === HttpTransportType.ServerSentEvents && !this.options.EventSource)
-          ) {
+          if ((transport === HttpTransportType.WebSockets && !this.options.WxSocket)) {
             this.logger.log(
               LogLevel.Debug,
               `Skipping transport '${HttpTransportType[transport]}' because it is not supported in your environment.'`
