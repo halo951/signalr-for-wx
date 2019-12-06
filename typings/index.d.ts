@@ -11,6 +11,6 @@ export { Request } from "./wx-request/index";
 export { RequestConfig, RequestMethod, RequestOption, ResponseOptions, ResponseType } from "./wx-request/model";
 export { AbortError, HttpError, TimeoutError } from "./Errors";
 export { ILogger, LogLevel } from "./ILogger";
-export { HttpTransportType, TransferFormat, ITransport } from "./ITransport";
+export { HttpTransportType, TransferFormat, ITransport, LongPollingTransportOptions, WxSocketTransportOptions } from "./ITransport";
 export { IStreamSubscriber, IStreamResult, ISubscription } from "./Stream";
 export { IHttpConnectionOptions } from "./IHttpConnectionOptions";

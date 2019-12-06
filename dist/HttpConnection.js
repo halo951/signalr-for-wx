@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 import { LogLevel } from "./ILogger";
-import { HttpTransportType, TransferFormat } from "./ITransport";
+import { HttpTransportType, TransferFormat } from './ITransport';
 import { LongPollingTransport } from "./LongPollingTransport";
 import { Arg, createLogger } from "./Utils";
 import DefaultRequest from "./DefualtRequest";
@@ -57,11 +57,11 @@ var HttpConnection = /** @class */ (function () {
         this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
         options.logMessageContent = options.logMessageContent || false;
         // ! 修改 options 参数赋值方式
-        if (options.WxSocket && wx) {
-            WxSocketModule = options.WxSocket;
+        if (!options.WxSocket && wx) {
+            options.WxSocket = WxSocketModule;
         }
-        if (options.LongPolling) {
-            LongPollingModule = options.LongPolling;
+        if (!options.LongPolling) {
+            options.LongPolling = LongPollingModule;
         }
         this.request = options.request || new DefaultRequest({}, this.logger);
         this.connectionState = 2 /* Disconnected */;
@@ -338,19 +338,21 @@ var HttpConnection = /** @class */ (function () {
      *
      * @description 这里对原来的实例化方式进行了改写,如果传入的是实例化完成的 Transport ,将直接返回
      *  如果是传入继承 Transport的 class,将执行 new Transport(options)
+     * - 这里对原生的多项入参合并成了options(这点差异需要注意)
      * @private
      * @param {HttpTransportType} transport
      * @returns
      * @memberof HttpConnection
      */
     HttpConnection.prototype.constructTransport = function (transport) {
+        var _a = this.options, WxSocket = _a.WxSocket, LongPolling = _a.LongPolling, wxSocketTransportOptions = _a.wxSocketTransportOptions, longPollingTransportOptions = _a.longPollingTransportOptions;
         switch (transport) {
             case HttpTransportType.WebSockets: // wx socket 方式
-                if (WxSocketModule instanceof WxSocketTransport) {
-                    return WxSocketModule;
+                if (WxSocket instanceof WxSocketTransport) {
+                    return WxSocket;
                 }
                 else {
-                    return new WxSocketModule({
+                    return new WxSocket(wxSocketTransportOptions ? wxSocketTransportOptions : {
                         // token 工厂
                         accessTokenFactory: this.accessTokenFactory,
                         // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
@@ -364,7 +366,7 @@ var HttpConnection = /** @class */ (function () {
                          */
                         allowReplaceSocket: true,
                         /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
-                        enableMessageQueue: false,
+                        enableMessageQueue: this.options.enableMessageQueue == undefined ? true : this.options.enableMessageQueue,
                         /** 重连设置 */
                         reconnect: {
                             enable: true,
@@ -373,11 +375,16 @@ var HttpConnection = /** @class */ (function () {
                     });
                 }
             case HttpTransportType.LongPolling: // 长轮询方式
-                if (LongPollingModule instanceof LongPollingTransport) {
-                    return LongPollingModule;
+                if (LongPolling instanceof LongPollingTransport) {
+                    return LongPolling;
                 }
                 else {
-                    return new LongPollingModule(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
+                    return new LongPolling(longPollingTransportOptions ? longPollingTransportOptions : {
+                        request: this.request,
+                        accessTokenFactory: this.accessTokenFactory,
+                        logger: this.logger,
+                        logMessageContent: this.options.logMessageContent || false
+                    });
                 }
             default:
                 throw new Error("Unknown transport: " + transport + ".");

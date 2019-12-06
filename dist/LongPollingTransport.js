@@ -41,6 +41,8 @@ import { LogLevel } from "./ILogger";
 import { TransferFormat } from "./ITransport";
 import { Arg, getDataDetail, sendMessage } from "./Utils";
 import { ResponseType } from "./wx-request/model/ResponseType";
+import { NullLogger } from './Loggers';
+import DefaultRequest from "./DefualtRequest";
 // Not exported from 'index', this type is internal.
 /**
  * 长轮询
@@ -55,12 +57,12 @@ var LongPollingTransport = /** @class */ (function () {
      * @param {boolean} logMessageContent
      * @memberof LongPollingTransport
      */
-    function LongPollingTransport(request, accessTokenFactory, logger, logMessageContent) {
-        this.request = request; // ! rewrite lint
-        this.accessTokenFactory = accessTokenFactory;
-        this.logger = logger;
+    function LongPollingTransport(options) {
+        this.accessTokenFactory = options.accessTokenFactory ? options.accessTokenFactory : undefined;
+        this.logger = options.logger ? options.logger : new NullLogger();
         this.pollAbort = new AbortController();
-        this.logMessageContent = logMessageContent;
+        this.logMessageContent = options.logMessageContent ? options.logMessageContent : false;
+        this.request = options.request ? options.request : new DefaultRequest({}, this.logger);
         this.running = false;
         this.onreceive = null;
         this.onclose = null;
