@@ -4,6 +4,8 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 
 > **copy from @aspnet/signalr**
 
+**注意,当前版本还不算稳定,毕竟刚做出来,如果要重写 Transport,建议 fork 代码库自行修改.或完全按照官方原生方式使用**
+
 #### version
 
 - 2019 年 12 月 6 日 13:26:01
