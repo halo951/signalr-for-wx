@@ -136,7 +136,7 @@ export class WxSocketTransport implements ITransport {
       // ! 因为小程序两种协议都支持,所以不需要指定特定的 binaryType
       /** 连接成功处理 */
       socketTask.onOpen(async (result: WechatMiniprogram.OnOpenCallbackResult) => {
-        this.logger.log(LogLevel.Information, `websocket连接建立  ws api:[${options.url}]`);
+        this.logger.log(LogLevel.Information, `websocket连接建立 ${this.logMessageContent ? "wx api:[" + options.url + "]" : ""}`);
         this.logger.log(LogLevel.Debug, `wx.connectSocket success message:`, result);
         WxSocketTransport.count += 1;
         this.readyState = WxSocketReadyState.OPEN;
@@ -145,9 +145,11 @@ export class WxSocketTransport implements ITransport {
         await resolve();
         // 发送在连接建立前发送的消息
         if (this.enableMessageQueue && this.messageQueue.length > 0) {
-          this.logger.log(LogLevel.Debug, `推送离线消息`)
           // 队列推送
-          for (let msg of this.messageQueue) await this.send(msg);
+          for (let msg of this.messageQueue) {
+            this.logger.log(LogLevel.Debug, `推送离线消息`, this.logMessageContent ? msg : "");
+            await this.send(msg);
+          }
         }
       });
       /** 建立连接出错处理 */

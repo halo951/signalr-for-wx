@@ -157,7 +157,7 @@ var WxSocketTransport = /** @class */ (function () {
                                 return __generator(this, function (_b) {
                                     switch (_b.label) {
                                         case 0:
-                                            this.logger.log(LogLevel.Information, "websocket\u8FDE\u63A5\u5EFA\u7ACB  ws api:[" + options.url + "]");
+                                            this.logger.log(LogLevel.Information, "websocket\u8FDE\u63A5\u5EFA\u7ACB " + (this.logMessageContent ? "wx api:[" + options.url + "]" : ""));
                                             this.logger.log(LogLevel.Debug, "wx.connectSocket success message:", result);
                                             WxSocketTransport.count += 1;
                                             this.readyState = WxSocketReadyState.OPEN;
@@ -168,12 +168,12 @@ var WxSocketTransport = /** @class */ (function () {
                                             // 等待回调执行完成后,再重新队列中消息
                                             _b.sent();
                                             if (!(this.enableMessageQueue && this.messageQueue.length > 0)) return [3 /*break*/, 5];
-                                            this.logger.log(LogLevel.Debug, "\u63A8\u9001\u79BB\u7EBF\u6D88\u606F");
                                             _i = 0, _a = this.messageQueue;
                                             _b.label = 2;
                                         case 2:
                                             if (!(_i < _a.length)) return [3 /*break*/, 5];
                                             msg = _a[_i];
+                                            this.logger.log(LogLevel.Debug, "\u63A8\u9001\u79BB\u7EBF\u6D88\u606F", this.logMessageContent ? msg : "");
                                             return [4 /*yield*/, this.send(msg)];
                                         case 3:
                                             _b.sent();
