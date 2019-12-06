@@ -2,11 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 import { ILogger, LogLevel } from "./ILogger";
-import { ITransport, ConnectOptions } from "./ITransport";
+import { ITransport, ConnectOptions, WxSocketTransportOptions } from "./ITransport";
 import { Arg, getDataDetail } from "./Utils";
 import { WxSocketReadyState } from "./Polyfills";
 import { isVersionSupport } from "./WechatVersionDiff";
-
 /**
  * 微信 sosocket 数据传输
  * @description 整体重写了这部分websocket支持,逻辑这样看起来合理一些
@@ -47,31 +46,7 @@ export class WxSocketTransport implements ITransport {
   /** 连接参数 */
   connectOptions: WechatMiniprogram.ConnectSocketOption;
 
-  constructor(options?: {
-    // token 工厂
-    accessTokenFactory: (() => string | Promise<string>) | undefined;
-    // socket url 替换 (当accessTokenFactory 满足不了需求情况下使用这个)
-    socketUrlFactory: ((url: string) => string | Promise<string> | undefined) | undefined;
-    // logger
-    logger: ILogger;
-    logMessageContent: boolean;
-    /** 是否允许替换socket连接
-     *
-     * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
-     */
-    allowReplaceSocket?: boolean;
-    /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
-    enableMessageQueue?: boolean;
-    /** 建立连接超时时间 - (默认 60s) */
-    timeout?: number;
-    /** 监听等待时间 */
-    delayTime?: number;
-    /** 重连设置 */
-    reconnect?: {
-      enable?: boolean; // 是否启用
-      max?: number; // 最大重连次数
-    };
-  }) {
+  constructor(options?: WxSocketTransportOptions) {
     this.logger = options.logger;
     this.accessTokenFactory = options.accessTokenFactory;
     this.socketUrlFactory = options.socketUrlFactory;

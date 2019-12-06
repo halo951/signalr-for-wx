@@ -9,7 +9,7 @@ export class NullLogger implements ILogger {
     /** The singleton instance of the {@link @aspnet/signalr.NullLogger}. */
     public static instance: ILogger = new NullLogger();
 
-    private constructor() { }
+    constructor() { }
     log(logLevel: LogLevel, ...msg: any): void { }
 
 }

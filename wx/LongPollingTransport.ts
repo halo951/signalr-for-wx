@@ -4,11 +4,13 @@
 import { AbortController } from "./AbortController";
 import { HttpError, TimeoutError } from "./Errors";
 import { ILogger, LogLevel } from "./ILogger";
-import { ITransport, TransferFormat, ConnectOptions } from "./ITransport";
+import { ITransport, TransferFormat, ConnectOptions, LongPollingTransportOptions } from "./ITransport";
 import { Arg, getDataDetail, sendMessage } from "./Utils";
 import { Request } from "./wx-request/index";
 import { ResponseType } from "./wx-request/model/ResponseType";
 import { RequestOption } from "./wx-request/model/RequestOption";
+import { NullLogger } from './Loggers';
+import DefaultRequest from "./DefualtRequest";
 
 // Not exported from 'index', this type is internal.
 /**
@@ -50,17 +52,12 @@ export class LongPollingTransport implements ITransport {
    * @param {boolean} logMessageContent
    * @memberof LongPollingTransport
    */
-  constructor(
-    request: Request,
-    accessTokenFactory: (() => string | Promise<string>) | undefined,
-    logger: ILogger,
-    logMessageContent: boolean
-  ) {
-    this.request = request; // ! rewrite lint
-    this.accessTokenFactory = accessTokenFactory;
-    this.logger = logger;
+  constructor(options?: LongPollingTransportOptions) {
+    this.accessTokenFactory = options.accessTokenFactory ? options.accessTokenFactory : undefined;
+    this.logger = options.logger ? options.logger : new NullLogger();
     this.pollAbort = new AbortController();
-    this.logMessageContent = logMessageContent;
+    this.logMessageContent = options.logMessageContent ? options.logMessageContent : false;
+    this.request = options.request ? options.request : new DefaultRequest({}, this.logger);
     this.running = false;
     this.onreceive = null;
     this.onclose = null;

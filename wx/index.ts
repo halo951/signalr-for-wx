@@ -44,7 +44,7 @@ export { AbortError, HttpError, TimeoutError } from "./Errors";
 // logger 接口
 export { ILogger, LogLevel } from "./ILogger";
 // Transport 接口
-export { HttpTransportType, TransferFormat, ITransport } from "./ITransport";
+export { HttpTransportType, TransferFormat, ITransport, LongPollingTransportOptions, WxSocketTransportOptions } from "./ITransport";
 // 流接口
 export { IStreamSubscriber, IStreamResult, ISubscription } from "./Stream";
 // 链接实现接口

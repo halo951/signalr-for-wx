@@ -4,6 +4,13 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 
 > **copy from @aspnet/signalr**
 
+#### version
+
+- 2019 年 12 月 6 日 13:26:01
+  今天改了下 bug,然后修改了原生实现自定义 `Transport` 方法,
+  目前,实现自定义 `Transport` 需要继承对应的 Transport class,或者 实现对应的 `[WxSocket|LongPolling]TransportOptions`
+  还有就是,修改了 `Transport` 构造函数,将原有的传入多参数封装成为 `options`,可以引用自定义实现的 options 来创建传输实例了.
+
 ### library
 
 > 原始项目地址 [@aspnet/signalr](https://github.com/aspnet/SignalR#readme)

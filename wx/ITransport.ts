@@ -1,3 +1,6 @@
+import { ILogger } from "./ILogger";
+import { Request } from "./wx-request";
+
 // 版权所有（c）.NET基金会。保留所有权利。
 // 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 
@@ -48,4 +51,46 @@ export interface ITransport {
    * 关闭行为
    */
   onclose: ((error?: Error) => void) | null;
+}
+
+
+/**
+ * 微信socket实例化参数
+ */
+export interface WxSocketTransportOptions {
+  // token 工厂
+  accessTokenFactory: (() => string | Promise<string>) | undefined;
+  // socket url 替换 (当accessTokenFactory 满足不了需求情况下使用这个)
+  socketUrlFactory: ((url: string) => string | Promise<string> | undefined) | undefined;
+  // logger
+  logger: ILogger;
+  logMessageContent: boolean;
+  /** 是否允许替换socket连接
+   *
+   * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
+   */
+  allowReplaceSocket?: boolean;
+  /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
+  enableMessageQueue?: boolean;
+  /** 建立连接超时时间 - (默认 60s) */
+  timeout?: number;
+  /** 监听等待时间 */
+  delayTime?: number;
+  /** 重连设置 */
+  reconnect?: {
+    enable?: boolean; // 是否启用
+    max?: number; // 最大重连次数
+  };
+}
+/**
+ * 长轮询 实例化参数
+ *
+ * @export
+ * @interface LongPollingTransportOptions
+ */
+export interface LongPollingTransportOptions {
+  request?: Request;
+  accessTokenFactory: (() => string | Promise<string>) | undefined;
+  logger: ILogger;
+  logMessageContent: boolean;
 }

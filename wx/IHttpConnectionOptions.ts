@@ -2,7 +2,7 @@
 // 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 
 import { ILogger, LogLevel } from "./ILogger";
-import { HttpTransportType, ITransport } from "./ITransport";
+import { HttpTransportType, ITransport, WxSocketTransportOptions, LongPollingTransportOptions } from './ITransport';
 import { Request } from "./wx-request/index";
 import { WxSocketTransport } from "./WxSocketTransport";
 import { LongPollingTransport } from './LongPollingTransport';
@@ -67,21 +67,41 @@ export interface IHttpConnectionOptions {
    * -fy : 指示是否应跳过协商。只有当{@link@aspnet/signaler.IHttpConnectionOptions.transport}属性设置为“HttpTransportType.WebSockets”时，才能跳过协商。
    */
   skipNegotiation?: boolean;
+  /** 以下是重写后的参数接口,跟原生的实现方式略有差异,主要体现在自定义实现Transport这块 */
   /**
    * 微信socket 自定义实现接口
-   * @description 需要继承 WxSocketTransport 然后,传入 class
+   * @description 需要继承 WxSocketTransport 然后,传入 class 或者实现对应类型的 Transport 接口也行
    * @type {WxSocketTransport}
    * @memberof IHttpConnectionOptions
    */
   WxSocket?: WxSocketTransport | any;
   /**
+   * 是否单独启动 wxSocket断线消息队列
+   * @description 启用后,socket链接断开时,自动重连,并记录未发送消息,在本实例连接成功后,重发.
+   */
+  enableMessageQueue?: boolean;
+  /**
+   * wxSocket 自定义链接参数,将覆盖 enableMessageQueue 参数, 但是如果传入了 实例化过的 WxSocket 此参数将无效
+   */
+  wxSocketTransportOptions?: WxSocketTransportOptions;
+
+  /**
    * 长轮询自定义实现接口
    *
-   * @description 需要继承 LongPollingTransport 然后,传入 class
+   * @description 需要继承 LongPollingTransport 然后,传入 class 或者实现对应类型的 Transport 接口也行
    * @type {LongPollingTransport}
    * @memberof IHttpConnectionOptions
    */
   LongPolling?: LongPollingTransport | any;
+
+  /**
+   * 长轮询自定义入参
+   *
+   * @type {LongPollingTransportOptions}
+   * @memberof IHttpConnectionOptions
+   */
+  longPollingTransportOptions?: LongPollingTransportOptions;
+
   /**
    * ! 自定义解析url方法,用于兼容 signalr 默认使用 <a href> 解析非全路径问题
    */

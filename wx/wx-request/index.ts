@@ -5,6 +5,7 @@ import { ResponseOptions } from "./model/ResponseOptions";
 import { RequestOption } from "./model/RequestOption";
 import { ILogger, LogLevel } from "../ILogger";
 import { TimeoutError, HttpError } from "../Errors";
+import { NullLogger } from '../Loggers';
 
 /**
  * 封装微信ajax请求工具
@@ -25,18 +26,12 @@ export class Request {
     // 写入配置
     if (wx) {
       // Time: 继承 signalR logger. 日志统一维护
-      this.logger = logger
-        ? logger
-        : {
-          log(logLevel: LogLevel, message: string) {
-            /* 屏蔽打印 */
-          }
-        };
-      // custom wx request promise library.
-      this.setConfig(config);
+      this.logger = logger ? logger : new NullLogger()
     } else {
       throw new Error("当前运行环境不是微信运行环境");
     }
+    // custom wx request promise library.
+    this.setConfig(config);
   }
   /**
    * merge config

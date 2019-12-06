@@ -334,32 +334,51 @@ var HttpConnection = /** @class */ (function () {
             });
         });
     };
+    /**
+     *
+     * @description 这里对原来的实例化方式进行了改写,如果传入的是实例化完成的 Transport ,将直接返回
+     *  如果是传入继承 Transport的 class,将执行 new Transport(options)
+     * @private
+     * @param {HttpTransportType} transport
+     * @returns
+     * @memberof HttpConnection
+     */
     HttpConnection.prototype.constructTransport = function (transport) {
         switch (transport) {
             case HttpTransportType.WebSockets: // wx socket 方式
-                return new WxSocketModule({
-                    // token 工厂
-                    accessTokenFactory: this.accessTokenFactory,
-                    // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
-                    socketUrlFactory: this.socketUrlFactory,
-                    // logger
-                    logger: this.logger,
-                    logMessageContent: this.options.logMessageContent || false,
-                    /** 是否允许替换socket连接
-                     *
-                     * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
-                     */
-                    allowReplaceSocket: true,
-                    /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
-                    enableMessageQueue: false,
-                    /** 重连设置 */
-                    reconnect: {
-                        enable: true,
-                        max: 3
-                    }
-                });
+                if (WxSocketModule instanceof WxSocketTransport) {
+                    return WxSocketModule;
+                }
+                else {
+                    return new WxSocketModule({
+                        // token 工厂
+                        accessTokenFactory: this.accessTokenFactory,
+                        // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
+                        socketUrlFactory: this.socketUrlFactory,
+                        // logger
+                        logger: this.logger,
+                        logMessageContent: this.options.logMessageContent || false,
+                        /** 是否允许替换socket连接
+                         *
+                         * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
+                         */
+                        allowReplaceSocket: true,
+                        /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
+                        enableMessageQueue: false,
+                        /** 重连设置 */
+                        reconnect: {
+                            enable: true,
+                            max: 3
+                        }
+                    });
+                }
             case HttpTransportType.LongPolling: // 长轮询方式
-                return new LongPollingModule(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
+                if (LongPollingModule instanceof LongPollingTransport) {
+                    return LongPollingModule;
+                }
+                else {
+                    return new LongPollingModule(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
+                }
             default:
                 throw new Error("Unknown transport: " + transport + ".");
         }
