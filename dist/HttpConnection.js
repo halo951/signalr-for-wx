@@ -57,8 +57,6 @@ var HttpConnection = /** @class */ (function () {
         options.logMessageContent = options.logMessageContent || false;
         // ! 修改 options 参数赋值方式
         if (!options.WxSocket) {
-            console.log("wx:", wx);
-            console.log("WxSocketModule:", WxSocketModule);
             if (wx && WxSocketModule) {
                 options.WxSocket = WxSocketModule;
             }
@@ -129,13 +127,14 @@ var HttpConnection = /** @class */ (function () {
                     case 0:
                         url = this.baseUrl;
                         this.accessTokenFactory = this.options.accessTokenFactory;
+                        this.socketUrlFactory = this.options.socketUrlFactory;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 12, , 13]);
                         if (!this.options.skipNegotiation) return [3 /*break*/, 5];
-                        if (!(this.options.transport === HttpTransportType.WxSocket)) return [3 /*break*/, 3];
+                        if (!(this.options.transport === HttpTransportType.WebSockets)) return [3 /*break*/, 3];
                         // No need to add a connection ID in this case
-                        this.transport = this.constructTransport(HttpTransportType.WxSocket);
+                        this.transport = this.constructTransport(HttpTransportType.WebSockets);
                         // We should just call connect directly in this case.
                         // No fallback or negotiate in this case.
                         return [4 /*yield*/, this.transport.connect({
@@ -170,13 +169,14 @@ var HttpConnection = /** @class */ (function () {
                                             throw Error(negotiateResponse.error);
                                         }
                                         if (negotiateResponse.ProtocolVersion) {
-                                            throw Error("Detected a connection attempt to an ASP.NET SignalR Server. This client only supports connecting to an ASP.NET Core SignalR Server. See https://aka.ms/signalr-core-differences for details.");
+                                            throw Error("检测到尝试连接到一个 非 ASP.NET Core 服务器。此客户端仅支持连接到ASP.NET Core 服务器。. See https://aka.ms/signalr-core-differences for details.");
                                         }
                                         if (negotiateResponse.url) {
                                             url = negotiateResponse.url;
                                         }
                                         if (negotiateResponse.accessToken) {
                                             accessToken_1 = negotiateResponse.accessToken;
+                                            // ! 通过 /negotiate 接口返回的assessToken 仅支持 accessTokenFactory(),如果实现了 socketUrlFactory(),会忽略掉这个token
                                             this_1.accessTokenFactory = function () { return accessToken_1; };
                                         }
                                         redirects++;
@@ -197,7 +197,7 @@ var HttpConnection = /** @class */ (function () {
                         _a.label = 9;
                     case 9:
                         if (redirects === MAX_REDIRECTS && negotiateResponse.url) {
-                            throw Error("Negotiate redirection limit exceeded.");
+                            throw Error("Negotiate redirection limit exceeded. -fy : 超出协商重定向限制");
                         }
                         return [4 /*yield*/, this.createTransport(url, this.options.transport, negotiateResponse, transferFormat)];
                     case 10:
@@ -212,7 +212,7 @@ var HttpConnection = /** @class */ (function () {
                         // only change the state if we were connecting to not overwrite
                         // the state if the connection is already marked as Disconnected
                         this.changeState(0 /* Connecting */, 1 /* Connected */);
-                        return [3 /*break*/, 13];
+                        return [2 /*return*/];
                     case 12:
                         e_2 = _a.sent();
                         this.logger.log(LogLevel.Error, "Failed to start the connection: ", e_2);
@@ -310,10 +310,6 @@ var HttpConnection = /** @class */ (function () {
                         _a.label = 5;
                     case 5:
                         _a.trys.push([5, 7, , 8]);
-                        console.log({
-                            url: connectUrl,
-                            transferFormat: requestedTransferFormat
-                        });
                         return [4 /*yield*/, this.transport.connect({
                                 url: connectUrl,
                                 transferFormat: requestedTransferFormat
@@ -324,7 +320,7 @@ var HttpConnection = /** @class */ (function () {
                         return [2 /*return*/];
                     case 7:
                         ex_1 = _a.sent();
-                        this.logger.log(LogLevel.Error, "Failed to start the transport '" + HttpTransportType[transport] + "': " + ex_1);
+                        this.logger.log(LogLevel.Error, "Failed to start the transport '" + HttpTransportType[transport] + "':", ex_1);
                         this.connectionState = 2 /* Disconnected */;
                         negotiateResponse.connectionId = undefined;
                         return [3 /*break*/, 8];
@@ -338,13 +334,15 @@ var HttpConnection = /** @class */ (function () {
     };
     HttpConnection.prototype.constructTransport = function (transport) {
         switch (transport) {
-            case HttpTransportType.WxSocket:
+            case HttpTransportType.WebSockets:
                 if (!this.options.WxSocket) {
                     throw new Error("'WebSocket' is not supported in your environment.");
                 }
                 return new WxSocketTransport({
                     // token 工厂
                     accessTokenFactory: this.accessTokenFactory,
+                    // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
+                    socketUrlFactory: this.socketUrlFactory,
                     // logger
                     logger: this.logger,
                     logMessageContent: this.options.logMessageContent || false,
@@ -369,7 +367,6 @@ var HttpConnection = /** @class */ (function () {
     };
     HttpConnection.prototype.resolveTransport = function (endpoint, requestedTransport, requestedTransferFormat) {
         var transport = HttpTransportType[endpoint.transport];
-        this.logger.log(LogLevel.Trace, "check transport :HttpTransportType[endpoint.transport]", HttpTransportType, endpoint.transport, endpoint);
         if (transport === null || transport === undefined) {
             this.logger.log(LogLevel.Debug, "Skipping transport '" + endpoint.transport + "' because it is not supported by this client.");
         }
@@ -377,7 +374,7 @@ var HttpConnection = /** @class */ (function () {
             var transferFormats = endpoint.transferFormats.map(function (s) { return TransferFormat[s]; });
             if (transportMatches(requestedTransport, transport)) {
                 if (transferFormats.indexOf(requestedTransferFormat) >= 0) {
-                    if ((transport === HttpTransportType.WxSocket && !this.options.WxSocket)) {
+                    if ((transport === HttpTransportType.WebSockets && !this.options.WxSocket)) {
                         this.logger.log(LogLevel.Debug, "Skipping transport '" + HttpTransportType[transport] + "' because it is not supported in your environment.'");
                     }
                     else {

@@ -295,17 +295,17 @@ var ConsoleLogger = /** @class */ (function () {
             switch (logLevel) {
                 case LogLevel.Critical:
                 case LogLevel.Error:
-                    console.error("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
+                    console.error.apply(console, ["[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>"].concat(msg.slice(1, msg.length)));
                     break;
                 case LogLevel.Warning:
-                    console.warn("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
+                    console.warn.apply(console, ["[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>"].concat(msg));
                     break;
                 case LogLevel.Information:
-                    console.info("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
+                    console.info.apply(console, ["[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>"].concat(msg));
                     break;
                 default:
                     // console.debug only goes to attached debuggers in Node, so we use console.log for Trace and Debug
-                    console.log("[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>", msg);
+                    console.log.apply(console, ["[" + new Date().toISOString() + "] " + LogLevel[logLevel] + " =>"].concat(msg));
                     break;
             }
         }

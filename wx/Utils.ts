@@ -131,6 +131,7 @@ export async function sendMessage(
   logMessageContent: boolean
 ): Promise<void> {
   let headers;
+
   if (accessTokenFactory) {
     const token = await accessTokenFactory();
     if (token) {

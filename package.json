@@ -1,6 +1,6 @@
 {
   "name": "signalr-for-wx",
-  "version": "0.6.7",
+  "version": "0.7.5",
   "description": ".NET Core SignalR client for wechat miniprogram",
   "homepage": "https://github.com/a951055/signalr-for-wx",
   "author": "Microsoft",
@@ -31,13 +31,14 @@
     "build:wx": "npm run clean && tsc --outDir ./dist & node plugin/replace-version",
     "commit": "npm run build:wx && yarn publish"
   },
+  "files": [
+    "*"
+  ],
   "miniprogram": "dist",
   "keywords": [
-    "signalr",
+    "wx-socket",
     "@aspnet/signalr",
     "signalr 微信小程序实现",
-    "wx",
-    "miniprogram",
     "signalr-for-wx"
   ]
 }

@@ -8,6 +8,14 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 
 > 原始项目地址 [@aspnet/signalr](https://github.com/aspnet/SignalR#readme)
 
+### notes
+
+> 基于@aspnet/signalr ts client 源码实现,操作方式参考`@aspnet/signalr`
+
+> 代码改动还不完善 有 bug 的话,github 上帮忙提下 issue [issues link](https://github.com/a951055/signalr-for-wx/issues)
+
+> 自己编译的话,执行 `yarn build:wx` 即可.
+
 ### 变更内容
 
 1.  引入 微信 ts library [./typings/\*\*](/typings),修改了编译指向为 `./src/**/*.ts`
@@ -55,7 +63,6 @@ connection.start().then(function() {
 });
 
 // connect socket
-
 connection.start().then(()=>{
     // connected
 }).catch(res=>{
@@ -63,28 +70,31 @@ connection.start().then(()=>{
     console.error(res); // print error msg.
 });
 
+// 后端修改默认 accessToken 示例
+
+  this.socket = new signalr.HubConnectionBuilder()
+      .configureLogging(1)
+      .withUrl(`${config.baseUrl}signalr`, {
+        // 这里放弃 accessTokenFactory(), 直接手工改写url
+        socketUrlFactory: async url => {
+          const code = await this.wechatLogin();
+          vlogger.info(`[getted code]:${code}`);
+          const { accessToken, encryptedAccessToken } = await this.generateAccessToken(code);
+          // 同步更新 request header token.
+          request.config.headers["Authorization"] = `Bearer ${accessToken}`;
+          // 参考 signalr原生参数附加方式
+          url += 0 > url.indexOf("?") ? "?" : "&" + `enc_access_token=${encodeURIComponent(encryptedAccessToken)}`;
+          return url;
+        }
+      })
+      .build();
+
 // 注意: message event 第一个参数是事件名,且必须是 string 类型, 否则抛出异常(第三个errMsg参数)
 
 // bind message event
 connection.on("message event", data => {
     // TODO handle callback
 });
-
-// 注意 event id 类型是 number
-// bind message event and get event id.
-let event = connection.on("message event", data => {
-    // TODO handle callback
-});
-// bind error or callback error.
-connection.on("message event", data => {
-    // TODO handle callback
-});
-
-
-// unbind event
-`connection.off("message event name");`
-// or
-`connection.off(eventId);`
 
 /**
  * invoke send message api
@@ -96,6 +106,7 @@ connection.on("message event", data => {
  * @description 重写了原有的 invoke 方法
  * - 在原有方法基础上 使用 array 实现队列推送
  * - 连接成功前调用的 invoke,以及 连接中断后的 invoke 将在队列中等待,下次连接成功时,
+ * - 禁用此项需要
  */
 connection.invoke(method,data).then(res=>{
     // send success

@@ -59,6 +59,7 @@ var WxSocketTransport = /** @class */ (function () {
         this.readyState = WxSocketReadyState.CONNECTING;
         this.logger = options.logger;
         this.accessTokenFactory = options.accessTokenFactory;
+        this.socketUrlFactory = options.socketUrlFactory;
         this.logMessageContent = options.logMessageContent;
         this.onreceive = null;
         this.onclose = null;
@@ -89,7 +90,7 @@ var WxSocketTransport = /** @class */ (function () {
     }
     WxSocketTransport.prototype.connect = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var token;
+            var replacedUrl, token;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -100,17 +101,27 @@ var WxSocketTransport = /** @class */ (function () {
                         Arg.validationUrlIsSupportByWechat(options.url);
                         this.connectOptions = options; // 连接参数缓存
                         this.logger.log(LogLevel.Trace, "(WebSockets transport) Connecting.");
-                        if (!this.accessTokenFactory) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.accessTokenFactory()];
+                        if (!this.socketUrlFactory) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.socketUrlFactory(options.url)];
                     case 1:
+                        replacedUrl = _a.sent();
+                        if (replacedUrl) {
+                            options.url = replacedUrl;
+                        }
+                        return [3 /*break*/, 4];
+                    case 2:
+                        if (!this.accessTokenFactory) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.accessTokenFactory()];
+                    case 3:
                         token = _a.sent();
+                        this.logger.log(LogLevel.Debug, "getted token:", token);
                         if (token) {
                             options.url += (options.url.indexOf("?") < 0 ? "?" : "&") + ("access_token=" + encodeURIComponent(token));
                         }
-                        _a.label = 2;
-                    case 2: return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _a.label = 4;
+                    case 4: return [2 /*return*/, new Promise(function (resolve, reject) {
                             // 忽略url修正,因为传入错误url的话,将直接抛出异常
-                            // options.url = options.url.replace(/^http/, "ws");
+                            options.url = options.url.replace(/^http/, "ws");
                             // 这里执行的是连接操socket的逻辑
                             var socketTask;
                             // 1.7.0 及以上版本，最多可以同时存在 5 个 WebSocket 连接, 以下版本，一个小程序同时只能有一个 WebSocket 连接，如果当前已存在一个 WebSocket 连接，会自动关闭该连接，并重新创建一个 WebSocket 连接
@@ -132,7 +143,12 @@ var WxSocketTransport = /** @class */ (function () {
                             if (!socketTask) {
                                 socketTask = wx.connectSocket(__assign({ 
                                     // 传入 两个默认的 回调,当然也可以在 options 里面覆盖 使用自定义回调.
-                                    success: function (res) { return resolve(res); }, fail: function (res) { return reject(res); } }, options));
+                                    success: function (res) {
+                                        _this.logger.log(LogLevel.Debug, "wx.connectSocket():success");
+                                    }, fail: function (res) {
+                                        _this.logger.log(LogLevel.Debug, "wx.connectSocket():fail");
+                                        reject(res);
+                                    } }, options));
                             }
                             // ! 因为小程序两种协议都支持,所以不需要指定特定的 binaryType
                             /** 连接成功处理 */
@@ -141,10 +157,10 @@ var WxSocketTransport = /** @class */ (function () {
                                 return __generator(this, function (_b) {
                                     switch (_b.label) {
                                         case 0:
+                                            this.logger.log(LogLevel.Information, "websocket\u8FDE\u63A5\u5EFA\u7ACB  ws api:[" + options.url + "]");
+                                            this.logger.log(LogLevel.Debug, "wx.connectSocket success message:", result);
                                             WxSocketTransport.count += 1;
                                             this.readyState = WxSocketReadyState.OPEN;
-                                            this.logger.log(LogLevel.Debug, "wx.connectSocket success message:", result);
-                                            this.logger.log(LogLevel.Information, "WebSocket connected to " + options.url + ".");
                                             this.socketTask = socketTask;
                                             // 等待回调执行完成后,再重新队列中消息
                                             return [4 /*yield*/, resolve()];
@@ -152,6 +168,7 @@ var WxSocketTransport = /** @class */ (function () {
                                             // 等待回调执行完成后,再重新队列中消息
                                             _b.sent();
                                             if (!(this.enableMessageQueue && this.messageQueue.length > 0)) return [3 /*break*/, 5];
+                                            this.logger.log(LogLevel.Debug, "\u63A8\u9001\u79BB\u7EBF\u6D88\u606F");
                                             _i = 0, _a = this.messageQueue;
                                             _b.label = 2;
                                         case 2:
@@ -212,13 +229,19 @@ var WxSocketTransport = /** @class */ (function () {
     WxSocketTransport.prototype.send = function (data) {
         return __awaiter(this, void 0, void 0, function () {
             var loop;
+            var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         if (!(this.socketTask && this.readyState === WxSocketReadyState.OPEN)) return [3 /*break*/, 1];
-                        this.logger.log(LogLevel.Trace, "(WebSockets transport) sending data.", getDataDetail(data, this.logMessageContent));
-                        this.socketTask.send(data);
-                        return [2 /*return*/, Promise.resolve()];
+                        this.logger.log(LogLevel.Trace, "[WxSocket] \u63A8\u9001\u6570\u636E.", getDataDetail(data, this.logMessageContent));
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                _this.socketTask.send({
+                                    data: data,
+                                    success: function () { return resolve(); },
+                                    fail: function () { return reject(); }
+                                });
+                            })];
                     case 1:
                         if (!this.enableMessageQueue) return [3 /*break*/, 5];
                         this.messageQueue.push(data);
@@ -239,7 +262,7 @@ var WxSocketTransport = /** @class */ (function () {
                         return [3 /*break*/, 2];
                     case 4: 
                     // 回调
-                    return [2 /*return*/, Promise.resolve()];
+                    return [2 /*return*/, this.send(data)];
                     case 5: return [2 /*return*/, Promise.reject({
                             errMsg: "WebSocket is not in the OPEN state"
                         })];

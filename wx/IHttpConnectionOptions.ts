@@ -5,6 +5,7 @@ import { ILogger, LogLevel } from "./ILogger";
 import { HttpTransportType, ITransport } from "./ITransport";
 import { Request } from "./wx-request/index";
 import { WxSocketTransport } from "./WxSocketTransport";
+import { LongPollingTransport } from './LongPollingTransport';
 
 /**
  * Options provided to the 'withUrl' method on {@link @aspnet/signalr.HubConnectionBuilder} to configure options for the HTTP-based transports.
@@ -45,6 +46,13 @@ export interface IHttpConnectionOptions {
   accessTokenFactory?(): string | Promise<string>;
 
   /**
+   * socket url 替换 (当accessTokenFactory 满足不了需求情况下使用这个)
+   * @returns {string | Promise<string> | undefined} 当返回string|Promise<string> 将替换 连接url 
+   * @memberof IHttpConnectionOptions
+   */
+  socketUrlFactory?(url: string): string | Promise<string> | undefined;
+
+  /**
    * A boolean indicating if message content should be logged.
    * 是否记录消息内容
    *
@@ -59,18 +67,20 @@ export interface IHttpConnectionOptions {
    * -fy : 指示是否应跳过协商。只有当{@link@aspnet/signaler.IHttpConnectionOptions.transport}属性设置为“HttpTransportType.WebSockets”时，才能跳过协商。
    */
   skipNegotiation?: boolean;
-
   /**
-   *  A constructor that can be used to create a WebSocket.
-   * @internal
+   * 微信socket 自定义实现接口
+   *
+   * @type {WxSocketTransport}
+   * @memberof IHttpConnectionOptions
    */
   WxSocket?: WxSocketTransport;
-
-  // Used for unit testing and code spelunkers
   /**
-   * EventSource 微信环境不支持
+   * 长轮询自定义实现接口
+   *
+   * @type {LongPollingTransport}
+   * @memberof IHttpConnectionOptions
    */
-  EventSource?: any;
+  LongPolling?: LongPollingTransport;
   /**
    * ! 自定义解析url方法,用于兼容 signalr 默认使用 <a href> 解析非全路径问题
    */

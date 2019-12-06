@@ -14,6 +14,7 @@ import { isVersionSupport } from "./WechatVersionDiff";
 export class WxSocketTransport implements ITransport {
   private readonly logger: ILogger;
   private readonly accessTokenFactory: (() => string | Promise<string>) | undefined;
+  private readonly socketUrlFactory: ((url: string) => string | Promise<string> | undefined) | undefined;
   private readonly logMessageContent: boolean;
 
   private socketTask?: WechatMiniprogram.SocketTask;
@@ -49,6 +50,8 @@ export class WxSocketTransport implements ITransport {
   constructor(options?: {
     // token 工厂
     accessTokenFactory: (() => string | Promise<string>) | undefined;
+    // socket url 替换 (当accessTokenFactory 满足不了需求情况下使用这个)
+    socketUrlFactory: ((url: string) => string | Promise<string> | undefined) | undefined;
     // logger
     logger: ILogger;
     logMessageContent: boolean;
@@ -71,6 +74,7 @@ export class WxSocketTransport implements ITransport {
   }) {
     this.logger = options.logger;
     this.accessTokenFactory = options.accessTokenFactory;
+    this.socketUrlFactory = options.socketUrlFactory;
     this.logMessageContent = options.logMessageContent;
     this.onreceive = null;
     this.onclose = null;
@@ -105,12 +109,17 @@ export class WxSocketTransport implements ITransport {
     Arg.validationUrlIsSupportByWechat(options.url);
     this.connectOptions = options; // 连接参数缓存
     this.logger.log(LogLevel.Trace, "(WebSockets transport) Connecting.");
-
     /**
      * 添加 token
      */
-    if (this.accessTokenFactory) {
+    if (this.socketUrlFactory) { // 为了兼容后端使用 enc_access_token 场景,增加一个 socketUrlFactory 方法,替换url.
+      const replacedUrl = await this.socketUrlFactory(options.url);
+      if (replacedUrl) {
+        options.url = replacedUrl;
+      }
+    } else if (this.accessTokenFactory) {
       const token = await this.accessTokenFactory();
+      this.logger.log(LogLevel.Debug, `getted token:`, token);
       if (token) {
         options.url += (options.url.indexOf("?") < 0 ? "?" : "&") + `access_token=${encodeURIComponent(token)}`;
       }

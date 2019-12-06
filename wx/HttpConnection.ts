@@ -36,6 +36,7 @@ export interface IAvailableTransport {
 
 const MAX_REDIRECTS = 100;
 let WxSocketModule: any = WxSocketTransport;
+let LongPollingModule: any = LongPollingTransport;
 
 /** @private */
 export class HttpConnection implements IConnection {
@@ -48,7 +49,7 @@ export class HttpConnection implements IConnection {
   private startPromise?: Promise<void>;
   private stopError?: Error;
   private accessTokenFactory?: () => string | Promise<string>;
-
+  private socketUrlFactory?: (url: string) => string | Promise<string> | undefined;
   public readonly features: any = {};
   public onreceive: ((data: string | ArrayBuffer) => void) | null;
   public onclose: ((e?: Error) => void) | null;
@@ -63,10 +64,12 @@ export class HttpConnection implements IConnection {
     this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
     options.logMessageContent = options.logMessageContent || false;
     // ! 修改 options 参数赋值方式
-    if (!options.WxSocket) {
-      if (wx && WxSocketModule) {
-        options.WxSocket = WxSocketModule;
-      }
+    if (options.WxSocket && wx) {
+      WxSocketModule = options.WxSocket;
+    }
+
+    if (options.LongPolling) {
+      LongPollingModule = options.LongPolling;
     }
 
     this.request = options.request || new DefaultRequest({}, this.logger);
@@ -129,6 +132,7 @@ export class HttpConnection implements IConnection {
     // as part of negotiating
     let url = this.baseUrl;
     this.accessTokenFactory = this.options.accessTokenFactory;
+    this.socketUrlFactory = this.options.socketUrlFactory;
 
     try {
       if (this.options.skipNegotiation) {
@@ -176,6 +180,7 @@ export class HttpConnection implements IConnection {
             // Replace the current access token factory with one that uses
             // the returned access token
             const accessToken = negotiateResponse.accessToken;
+            // ! 通过 /negotiate 接口返回的assessToken 仅支持 accessTokenFactory(),如果实现了 socketUrlFactory(),会忽略掉这个token
             this.accessTokenFactory = () => accessToken;
           }
 
@@ -298,13 +303,12 @@ export class HttpConnection implements IConnection {
 
   private constructTransport(transport: HttpTransportType) {
     switch (transport) {
-      case HttpTransportType.WebSockets:
-        if (!this.options.WxSocket) {
-          throw new Error("'WebSocket' is not supported in your environment.");
-        }
-        return new WxSocketTransport({
+      case HttpTransportType.WebSockets: // wx socket 方式
+        return new WxSocketModule({
           // token 工厂
           accessTokenFactory: this.accessTokenFactory,
+          // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
+          socketUrlFactory: this.socketUrlFactory,
           // logger
           logger: this.logger,
           logMessageContent: this.options.logMessageContent || false,
@@ -321,8 +325,8 @@ export class HttpConnection implements IConnection {
             max: 3
           }
         });
-      case HttpTransportType.LongPolling:
-        return new LongPollingTransport(
+      case HttpTransportType.LongPolling: // 长轮询方式
+        return new LongPollingModule(
           this.request,
           this.accessTokenFactory,
           this.logger,
