@@ -69,18 +69,19 @@ export interface IHttpConnectionOptions {
   skipNegotiation?: boolean;
   /**
    * 微信socket 自定义实现接口
-   *
+   * @description 需要继承 WxSocketTransport 然后,传入 class
    * @type {WxSocketTransport}
    * @memberof IHttpConnectionOptions
    */
-  WxSocket?: WxSocketTransport;
+  WxSocket?: WxSocketTransport | any;
   /**
    * 长轮询自定义实现接口
    *
+   * @description 需要继承 LongPollingTransport 然后,传入 class
    * @type {LongPollingTransport}
    * @memberof IHttpConnectionOptions
    */
-  LongPolling?: LongPollingTransport;
+  LongPolling?: LongPollingTransport | any;
   /**
    * ! 自定义解析url方法,用于兼容 signalr 默认使用 <a href> 解析非全路径问题
    */

@@ -44,6 +44,7 @@ import { ResponseType } from "./wx-request/model/ResponseType";
 import { WxSocketTransport } from "./WxSocketTransport";
 var MAX_REDIRECTS = 100;
 var WxSocketModule = WxSocketTransport;
+var LongPollingModule = LongPollingTransport;
 /** @private */
 var HttpConnection = /** @class */ (function () {
     function HttpConnection(url, options) {
@@ -56,10 +57,11 @@ var HttpConnection = /** @class */ (function () {
         this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
         options.logMessageContent = options.logMessageContent || false;
         // ! 修改 options 参数赋值方式
-        if (!options.WxSocket) {
-            if (wx && WxSocketModule) {
-                options.WxSocket = WxSocketModule;
-            }
+        if (options.WxSocket && wx) {
+            WxSocketModule = options.WxSocket;
+        }
+        if (options.LongPolling) {
+            LongPollingModule = options.LongPolling;
         }
         this.request = options.request || new DefaultRequest({}, this.logger);
         this.connectionState = 2 /* Disconnected */;
@@ -334,11 +336,8 @@ var HttpConnection = /** @class */ (function () {
     };
     HttpConnection.prototype.constructTransport = function (transport) {
         switch (transport) {
-            case HttpTransportType.WebSockets:
-                if (!this.options.WxSocket) {
-                    throw new Error("'WebSocket' is not supported in your environment.");
-                }
-                return new WxSocketTransport({
+            case HttpTransportType.WebSockets: // wx socket 方式
+                return new WxSocketModule({
                     // token 工厂
                     accessTokenFactory: this.accessTokenFactory,
                     // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
@@ -359,8 +358,8 @@ var HttpConnection = /** @class */ (function () {
                         max: 3
                     }
                 });
-            case HttpTransportType.LongPolling:
-                return new LongPollingTransport(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
+            case HttpTransportType.LongPolling: // 长轮询方式
+                return new LongPollingModule(this.request, this.accessTokenFactory, this.logger, this.options.logMessageContent || false);
             default:
                 throw new Error("Unknown transport: " + transport + ".");
         }
