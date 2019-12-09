@@ -28,8 +28,8 @@
   "dependencies": {},
   "scripts": {
     "clean": "node node_modules/rimraf/bin.js ./dist & node node_modules/rimraf/bin.js ./types",
-    "build:wx": "npm run clean && tsc --outDir ./dist & node plugin/replace-version",
-    "commit": "npm run build:wx && yarn publish"
+    "build:wx": "yarn clean && tsc --outDir ./dist & node plugin/replace-version",
+    "commit": "yarn build:wx && yarn publish"
   },
   "files": [
     "*"
