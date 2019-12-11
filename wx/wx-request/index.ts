@@ -5,7 +5,7 @@ import { ResponseOptions } from "./model/ResponseOptions";
 import { RequestOption } from "./model/RequestOption";
 import { ILogger, LogLevel } from "../ILogger";
 import { TimeoutError, HttpError } from "../Errors";
-import { NullLogger } from '../Loggers';
+import { NullLogger } from "../Loggers";
 
 /**
  * 封装微信ajax请求工具
@@ -26,7 +26,7 @@ export class Request {
     // 写入配置
     if (wx) {
       // Time: 继承 signalR logger. 日志统一维护
-      this.logger = logger ? logger : new NullLogger()
+      this.logger = logger ? logger : new NullLogger();
     } else {
       throw new Error("当前运行环境不是微信运行环境");
     }
@@ -88,15 +88,12 @@ export class Request {
     options.responseType = options.responseType
       ? options.responseType
       : options.config
-        ? options.config.responseType
-        : ResponseType.TEXT;
+      ? options.config.responseType
+      : ResponseType.TEXT;
     this.logger.log(LogLevel.Trace, `checked responseType [${options.responseType}]`);
     // 执行请求调用链
     if (options.config && options.config.transformRequest) {
-      this.logger.log(
-        LogLevel.Trace,
-        `execute transform request list. -result\n`, options.config
-      );
+      this.logger.log(LogLevel.Trace, `execute transform request list. -result\n`, options.config);
       options.config.transformRequest.forEach(fun => fun(options));
     }
     // debug print handled request options
@@ -122,10 +119,7 @@ export class Request {
         let result = fun(response);
         // 这个异常处理步骤未验证.
         if (result) {
-          this.logger.log(
-            LogLevel.Trace,
-            `execute transform request list. -result \n `, result
-          );
+          this.logger.log(LogLevel.Trace, `execute transform request list. -result \n `, result);
           return result;
         }
       }
@@ -208,7 +202,7 @@ export class Request {
             });
         },
         fail: (res: { errMsg: string }) => {
-          let responseOptions:ResponseOptions = null;
+          let responseOptions: ResponseOptions | any = null;
           if (res && /request:fail socket time out timeout/.test(res.errMsg)) {
             // ! 这里为了兼容 signalR的错误格式,抛出继承了TimeoutError异常.
             responseOptions = {
@@ -227,8 +221,8 @@ export class Request {
             };
           }
           /**
-           *  @date 2019年12月11日 13:14:25 
-           * ! 修复bug,wx.request fail 情况下, 未调用 response 处理链. 
+           *  @date 2019年12月11日 13:14:25
+           * ! 修复bug,wx.request fail 情况下, 未调用 response 处理链.
            */
           // 调用响应处理链(并返回结果)
           this.handleResponse(responseOptions)
@@ -240,7 +234,7 @@ export class Request {
                * @description 这里因为 signalR的原因,内置了一个 cookies.js [library](https://github.com/jshttp/cookie/index.js)
                * 略有改写,暂时将cookie 扔到内存中维护(毕竟就signalr使用,不考虑扔到 localStore 中占地方).
                */
-              if (options.config.cookie) options.config.cookie.set(options.url, header);
+              if (options.config.cookie) options.config.cookie.set(options.url, {});
               // callback
               resolve(res);
             })
