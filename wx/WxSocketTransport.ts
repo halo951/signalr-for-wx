@@ -87,7 +87,8 @@ export class WxSocketTransport implements ITransport {
     /**
      * 添加 token
      */
-    if (this.socketUrlFactory) { // 为了兼容后端使用 enc_access_token 场景,增加一个 socketUrlFactory 方法,替换url.
+    if (this.socketUrlFactory) {
+      // 为了兼容后端使用 enc_access_token 场景,增加一个 socketUrlFactory 方法,替换url.
       const replacedUrl = await this.socketUrlFactory(options.url);
       if (replacedUrl) {
         options.url = replacedUrl;
@@ -136,7 +137,10 @@ export class WxSocketTransport implements ITransport {
       // ! 因为小程序两种协议都支持,所以不需要指定特定的 binaryType
       /** 连接成功处理 */
       socketTask.onOpen(async (result: WechatMiniprogram.OnOpenCallbackResult) => {
-        this.logger.log(LogLevel.Information, `websocket连接建立 ${this.logMessageContent ? "wx api:[" + options.url + "]" : ""}`);
+        this.logger.log(
+          LogLevel.Information,
+          `websocket连接建立 ${this.logMessageContent ? "wx api:[" + options.url + "]" : ""}`
+        );
         this.logger.log(LogLevel.Debug, `wx.connectSocket success message:`, result);
         WxSocketTransport.count += 1;
         this.readyState = WxSocketReadyState.OPEN;
@@ -171,7 +175,8 @@ export class WxSocketTransport implements ITransport {
       socketTask.onMessage((res: WechatMiniprogram.SocketTaskOnMessageCallbackResult) => {
         this.logger.log(
           LogLevel.Trace,
-          `(WebSockets transport) data received.`, getDataDetail(res.data, this.logMessageContent)
+          `(WebSockets transport) data received.`,
+          getDataDetail(res.data, this.logMessageContent)
         );
         if (this.onreceive) {
           this.onreceive(res.data);
@@ -193,10 +198,7 @@ export class WxSocketTransport implements ITransport {
   /** 发送 */
   public async send(data: any): Promise<void> {
     if (this.socketTask && this.readyState === WxSocketReadyState.OPEN) {
-      this.logger.log(
-        LogLevel.Trace,
-        `[WxSocket] 推送数据.`, getDataDetail(data, this.logMessageContent)
-      );
+      this.logger.log(LogLevel.Trace, `[WxSocket] 推送数据.`, getDataDetail(data, this.logMessageContent));
       return new Promise((resolve, reject) => {
         this.socketTask.send({
           data,

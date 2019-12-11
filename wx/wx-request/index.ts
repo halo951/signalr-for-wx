@@ -208,23 +208,50 @@ export class Request {
             });
         },
         fail: (res: { errMsg: string }) => {
+          let responseOptions:ResponseOptions = null;
           if (res && /request:fail socket time out timeout/.test(res.errMsg)) {
             // ! 这里为了兼容 signalR的错误格式,抛出继承了TimeoutError异常.
-            reject({
+            responseOptions = {
               data: null,
               status: -1,
               errMsg: res.errMsg,
               ...new TimeoutError(res.errMsg)
-            });
+            };
           } else {
             // ! 这里为了兼容 signalR的错误格式,抛出继承了HttpError异常.
-            reject({
+            responseOptions = {
               data: null,
               status: -1,
               errMsg: res.errMsg,
               ...new HttpError(res.errMsg, 500)
-            });
+            };
           }
+          /**
+           *  @date 2019年12月11日 13:14:25 
+           * ! 修复bug,wx.request fail 情况下, 未调用 response 处理链. 
+           */
+          // 调用响应处理链(并返回结果)
+          this.handleResponse(responseOptions)
+            .then(res => {
+              // print debug
+              this.logger.log(LogLevel.Debug, `handle response context is success. \n`, res);
+              /**
+               * check and cache cookie (if has) |
+               * @description 这里因为 signalR的原因,内置了一个 cookies.js [library](https://github.com/jshttp/cookie/index.js)
+               * 略有改写,暂时将cookie 扔到内存中维护(毕竟就signalr使用,不考虑扔到 localStore 中占地方).
+               */
+              if (options.config.cookie) options.config.cookie.set(options.url, header);
+              // callback
+              resolve(res);
+            })
+            .catch((res: ResponseOptions) => {
+              // print log
+              this.logger.log(LogLevel.Error, `handle response context is fail. \n `, res);
+              // ! 这里为了兼容 signalR的错误格式,抛出继承了HttpError异常.
+              let httpError = new HttpError(res.errMsg, res.statusCode);
+              // callback  - 合并后,返回,可以被认定为 继承 HttpError对象.
+              reject({ ...res, ...httpError });
+            });
         }
       });
       // 监听 headers 变化

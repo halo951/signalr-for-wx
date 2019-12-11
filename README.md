@@ -9,6 +9,54 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 > 大概 1 个月后(current:2019 年 12 月 6 日 13:32:44) 会有一个稳定版本出来
 
 #### version
+- 2019年12月9日 16:39:33 
+  有个兼容问题暂时没有解决,因为这个库超过了100kb,导致直接在小程序项目中 `require("signalr-for-wx")` 在真机运行时,报 `signalr-for-wx is not defined.` 错误,目前的解决办法是
+  1. 如果是,编译工具,在编译时,重写 require 路径,直接 指向 `miniprogram_npm/signalr-for-wx/index`
+  2. 如果是原生编译,那么直接引入`miniprogram_npm/signalr-for-wx/index` 
+  3. 暂时没有好的解决办法,这个问题调了2天了,如果有好的建议,github上麻烦留言,我去尝试改下.
+   
+  **另外一个解决办法是在app.js中引入,这里面引入的话不会报这个错误**
+
+附:gulp 编译改路径插件(临时解决办法,剩下的就等我找到解决办法,再改这个问题了)
+```
+const { Transform } = require("readable-stream");
+const globs = require("globs");
+const pj = require("../../package.json");
+const path = require("path");
+/**
+ * 压缩wxml
+ */
+const convertMiniprogramImport = () => {
+  return new Transform({
+    objectMode: true,
+    transform(file, encoding, callback) {
+      if (file.isNull()) {
+        return callback(null, file);
+      } else if (file.isBuffer()) {
+        let code = String(file.contents);
+        let p = globs.sync("./package.json");
+        if (pj.dependencies && 0 < Object.keys(pj.dependencies).length) {
+          for (let key in pj.dependencies) {
+            globs(`${process.cwd()}/node_modules/${key}/package.json`, (err, matches) => {
+              if (!err && matches && 1 == matches.length) {
+                code = code.replace(new RegExp(`(["|'])(${key})(["|'])`, "gi"), `$1miniprogram_npm/$2/index$3`);
+              }
+              file.contents = Buffer.from(code);
+              callback(null, file);
+            });
+          }
+        } else {
+          file.contents = Buffer.from(code);
+          callback(null, file);
+        }
+      } else {
+        callback(null, file);
+      }
+    }
+  });
+};
+```
+
 
 - 2019 年 12 月 6 日 13:26:01
   今天改了下 bug,然后修改了原生实现自定义 `Transport` 方法,

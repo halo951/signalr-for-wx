@@ -2,7 +2,7 @@
 // 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 // 版本号模板 - builder 自动更新,无需手动
 /** The version of the SignalR client. */
-export var VERSION = "0.8.1";
+export var VERSION = "1.0.2";
 // 协议|类型参数 导出
 export { MessageType } from "./IHubProtocol";
 // json格式传输协议
