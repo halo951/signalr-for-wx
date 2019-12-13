@@ -1,6 +1,4 @@
-JavaScript and TypeScript clients for SignalR for ASP.NET Core
-
-# @aspnet/signalr for wechat miniprogram
+## @aspnet/signalr for wechat miniprogram
 
 > **copy from @aspnet/signalr**
 
@@ -9,19 +7,80 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 > 目前已经这个库已经算一个初步稳定的版本, 不过还请遵循 @aspnet/signalr 原版api 使用.
 > 这份文档 2019年12月13日 23:08:31 整理了下, 只保留跟原版 @aspnet/signalr 差异供参考.
 
-#### version
-- 2019年12月13日 23:03:01
- 1. 公司用的 `signalr-for-wx` 的小程序交互的小程序已经进入测试了, 开发阶段使用没出过什么问题,文档参考原版就行.
- 2. `IHttpConnectionOptions.ts` 增加可选参数 `socketUrlFactory` 用来解决后端修改 `access_token` 字段的情况. 
- 
-- 2019年12月9日 16:39:33 (有改动)
- 1. 因为这个库超过了100kb,导致直接在小程序项目中 `require("signalr-for-wx")` 在真机运行时,报 `signalr-for-wx is not defined.` 错误。
- 原因是因为
+## 使用
 
-- 2019 年 12 月 6 日 13:26:01
-  今天改了下 bug,然后修改了原生实现自定义 `Transport` 方法,
-  目前,实现自定义 `Transport` 需要继承对应的 Transport class,或者 实现对应的 `[WxSocket|LongPolling]TransportOptions]`
-  还有就是,修改了 `Transport` 构造函数,将原有的传入多参数封装成为 `options`,可以引用自定义实现的 options 来创建传输实例了.
+1. install `yarn add signalr-for-wx`
+2. 执行小程序 npm 包 编译
+3. use | 参考官方文档
+4. 小程序使用 需要直接从 `miniprogram_npm/signalr-for-wx/index` 中引用,不然在真机运行时,报 `signalr-for-wx is not defined.`
+
+### Example (use for wechat miniprogram)
+
+> 官方API
+ 1. (yarn libiary)[https://yarnpkg.com/en/package/@aspnet/signalr]
+ 2. (github)[https://github.com/SignalR/SignalR]
+
+> 修改后差异使用示例
+```
+// import
+import * as signalr from "miniprogram_npm/signalr-for-wx/index";
+
+// 默认连接示例
+const socket = new signalr.HubConnectionBuilder()
+      .configureLogging(1)
+      .withUrl(`${config.baseUrl}/socket`)
+      .build();
+
+// 替换参数示例
+this.socket = new signalr.HubConnectionBuilder()
+      .configureLogging(1)
+      .withUrl(`${config.baseUrl}/socket`, {
+        logger, // 自定义Ilogger [遵循官方即可]
+        request, // 可选, 替换默认请求库
+        socketUrlFactory: async url => {
+          // 注意: 差异部分, 用于替换原有 accessTokenFactory() 在 后端修改 access_token 参数情况下,替换socket链接url使用.
+          return url;
+        }
+      })
+      .build();
+
+// invoke 具体看官方示例
+this.socket.invoke('mothod name',(...args)=>{});
+
+// on
+this.socket.on('message event name',(...args) => {});
+
+// onclose
+
+this.socket.onclose((err)=>{
+  // TODO ...
+});
+
+// 其他的看官方示例吧.基本没改动
+
+```
+> 自定义 request
+
+1. 参数请参考 axios 官方示例 (github)[https://github.com/axios/axios]
+
+```
+// 改写 axios 实现
+export const request = new signalr.Request(
+  {
+    baseUrl: ``,
+    timeout: 60 * 1000,
+    headers: { tenantId: config.abpTenantId, "content-type": "application/json" },
+    transformRequest: [],
+    transformResponse: [],
+    responseType: signalr.ResponseType.JSON,
+    method: signalr.RequestMethod.GET
+  }, 
+  new Ilogger() // logger 接口实现,可不传
+);
+
+```
+
+
 
 ### library
 
@@ -57,51 +116,17 @@ JavaScript and TypeScript clients for SignalR for ASP.NET Core
 ├ [./src](./src) 原始源码路径, 但是现在没法编译了,因为改写了 tsrootpath.\n
 ├ [./dist](./dist) 编译后的 js 包, es 版本, 没其他的\n
 ├ [./typings](./typings) 导出的 ts .d.ts\n
-└
 
-## 使用
+#### version
+- 2019年12月13日 23:03:01
+ 1. 公司用的 `signalr-for-wx` 的小程序交互的小程序已经进入测试了, 开发阶段使用没出过什么问题,文档参考原版就行.
+ 2. `IHttpConnectionOptions.ts` 增加可选参数 `socketUrlFactory` 用来解决后端修改 `access_token` 字段的情况. 
+ 
+- 2019年12月9日 16:39:33 (有改动)
+ 1. 因为这个库超过了100kb,导致直接在小程序项目中 `require("signalr-for-wx")` 在真机运行时,报 `signalr-for-wx is not defined.` 错误。
+ 原因是因为
 
-1. install `yarn add signalr-for-wx`
-2. 执行小程序 npm 包 编译
-3. use | 参考官方文档
-
-### Example (use for wechat miniprogram)
-
-> 官方API
- 1. (yarn libiary)[https://yarnpkg.com/en/package/@aspnet/signalr]
- 2. (github)[https://github.com/SignalR/SignalR]
-
-> 修改后差异使用示例
-```
-this.socket = new signalr.HubConnectionBuilder()
-      .configureLogging(1)
-      .withUrl(`${config.baseUrl}/socket`, {
-        logger, // 自定义Ilogger [遵循官方即可]
-        request, // 可选, 替换默认请求库
-        socketUrlFactory: async url => {
-          // 注意: 差异部分, 用于替换原有 accessTokenFactory() 在 后端修改 access_token 参数情况下,替换socket链接url使用.
-          return url;
-        }
-      })
-      .build();
-```
-> 自定义 request
-
-1. 参数请参考 axios 官方示例 (github)[https://github.com/axios/axios]
-
-```
-// 改写 axios 实现
-export const request = new signalr.Request(
-  {
-    baseUrl: ``,
-    timeout: 60 * 1000,
-    headers: { tenantId: config.abpTenantId, "content-type": "application/json" },
-    transformRequest: [],
-    transformResponse: [],
-    responseType: signalr.ResponseType.JSON,
-    method: signalr.RequestMethod.GET
-  }, 
-  new Ilogger() // logger 接口实现,可不传
-);
-
-```
+- 2019 年 12 月 6 日 13:26:01
+  今天改了下 bug,然后修改了原生实现自定义 `Transport` 方法,
+  目前,实现自定义 `Transport` 需要继承对应的 Transport class,或者 实现对应的 `[WxSocket|LongPolling]TransportOptions]`
+  还有就是,修改了 `Transport` 构造函数,将原有的传入多参数封装成为 `options`,可以引用自定义实现的 options 来创建传输实例了.
