@@ -60,6 +60,7 @@ export class HttpConnection implements IConnection {
     this.logger = createLogger(options.logger);
 
     options = options || {};
+    
     // ! 这里修改为自定义解析 和 默认传入 全路径方式
     this.baseUrl = options.resolveUrl ? options.resolveUrl(url) : this.resolveUrl(url);
     options.logMessageContent = options.logMessageContent || false;
