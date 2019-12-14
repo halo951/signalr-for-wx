@@ -96,36 +96,55 @@ var Request = /** @class */ (function () {
      * @description 只支持普通get请求,和content-type = json 的 其他请求(post,put,delete,patch)
      */
     Request.prototype.handleRequestOptions = function (options) {
-        // 请求地址处理,对于非<scene>:// 请求,附加baseUrl
-        if (options.url && !/:\/\/.+?/.test(options.url)) {
-            options.url = ((options.config ? options.config.baseUrl : "") + "/" + options.url).replace(/([^:])(\/\/)/g, "$1/");
-        }
-        this.logger.log(LogLevel.Trace, "checked request url");
-        // https 处理
-        if (options.config && options.config.forceEnableHttps) {
-            options.url = options.url.replace(/http:/, "https:");
-            this.logger.log(LogLevel.Trace, "execute fix [request.config.forceEnableHttps] " + options.url);
-        }
-        // header 合并
-        options.headers = Object.assign({}, options.config ? options.config.headers : {}, options.headers);
-        this.logger.log(LogLevel.Trace, "merge headers ", options.headers);
-        // 移除微信封锁参数
-        delete options.headers["Referer"];
-        this.logger.log(LogLevel.Trace, "try delete headers Referer.");
-        // 替换请求内的ResponseType
-        options.responseType = options.responseType
-            ? options.responseType
-            : options.config
-                ? options.config.responseType
-                : ResponseType.TEXT;
-        this.logger.log(LogLevel.Trace, "checked responseType [" + options.responseType + "]");
-        // 执行请求调用链
-        if (options.config && options.config.transformRequest) {
-            this.logger.log(LogLevel.Trace, "execute transform request list. -result\n", options.config);
-            options.config.transformRequest.forEach(function (fun) { return fun(options); });
-        }
-        // debug print handled request options
-        this.logger.log(LogLevel.Debug, "handled request options \n", options);
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, _a, fun;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        // 请求地址处理,对于非<scene>:// 请求,附加baseUrl
+                        if (options.url && !/:\/\/.+?/.test(options.url)) {
+                            options.url = ((options.config ? options.config.baseUrl : "") + "/" + options.url).replace(/([^:])(\/\/)/g, "$1/");
+                        }
+                        this.logger.log(LogLevel.Trace, "checked request url");
+                        // https 处理
+                        if (options.config && options.config.forceEnableHttps) {
+                            options.url = options.url.replace(/http:/, "https:");
+                            this.logger.log(LogLevel.Trace, "execute fix [request.config.forceEnableHttps] " + options.url);
+                        }
+                        // header 合并
+                        options.headers = Object.assign({}, options.config ? options.config.headers : {}, options.headers);
+                        this.logger.log(LogLevel.Trace, "merge headers ", options.headers);
+                        // 移除微信封锁参数
+                        delete options.headers["Referer"];
+                        this.logger.log(LogLevel.Trace, "try delete headers Referer.");
+                        // 替换请求内的ResponseType
+                        options.responseType = options.responseType
+                            ? options.responseType
+                            : options.config
+                                ? options.config.responseType
+                                : ResponseType.TEXT;
+                        this.logger.log(LogLevel.Trace, "checked responseType [" + options.responseType + "]");
+                        if (!(options.config && options.config.transformRequest)) return [3 /*break*/, 4];
+                        this.logger.log(LogLevel.Trace, "execute transform request list. -result\n", options.config);
+                        _i = 0, _a = options.config.transformRequest;
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        fun = _a[_i];
+                        return [4 /*yield*/, fun(options)];
+                    case 2:
+                        _b.sent();
+                        _b.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4:
+                        // debug print handled request options
+                        this.logger.log(LogLevel.Debug, "handled request options \n", options);
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     /**
      * 验证响应结果,执行回调
@@ -136,23 +155,38 @@ var Request = /** @class */ (function () {
      * @memberof Request
      */
     Request.prototype.handleResponse = function (response) {
-        // 仅处理响应类型为JSON 返回值
-        if (response.options.config &&
-            response.options.config.responseType == "json" &&
-            response.options.config.transformResponse) {
-            for (var _i = 0, _a = response.options.config.transformResponse; _i < _a.length; _i++) {
-                var fun = _a[_i];
-                var result = fun(response);
-                // 这个异常处理步骤未验证.
-                if (result) {
-                    this.logger.log(LogLevel.Trace, "execute transform request list. -result \n ", result);
-                    return result;
+        return __awaiter(this, void 0, void 0, function () {
+            var _i, _a, fun, result;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!(response.options.config &&
+                            response.options.config.responseType == "json" &&
+                            response.options.config.transformResponse)) return [3 /*break*/, 4];
+                        _i = 0, _a = response.options.config.transformResponse;
+                        _b.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        fun = _a[_i];
+                        return [4 /*yield*/, fun(response)];
+                    case 2:
+                        result = _b.sent();
+                        // 这个异常处理步骤未验证.
+                        if (result) {
+                            this.logger.log(LogLevel.Trace, "execute transform request list. -result \n ", result);
+                            return [2 /*return*/, result];
+                        }
+                        _b.label = 3;
+                    case 3:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 4:
+                        // debug print handled response context
+                        this.logger.log(LogLevel.Debug, "handled response context \n", response);
+                        return [2 /*return*/, Promise.resolve(response)];
                 }
-            }
-        }
-        // debug print handled response context
-        this.logger.log(LogLevel.Debug, "handled response context \n", response);
-        return Promise.resolve(response);
+            });
+        });
     };
     /**
      * 执行请求

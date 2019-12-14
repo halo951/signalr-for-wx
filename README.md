@@ -118,6 +118,8 @@ export const request = new signalr.Request(
 ├ [./typings](./typings) 导出的 ts .d.ts\n
 
 #### version
+- 2019年12月14日 12:37:39
+ 1. 补充更新 wx-request 对 transform 方法增加 async/await 支持.
 - 2019年12月13日 23:03:01
  1. 公司用的 `signalr-for-wx` 的小程序交互的小程序已经进入测试了, 开发阶段使用没出过什么问题,文档参考原版就行.
  2. `IHttpConnectionOptions.ts` 增加可选参数 `socketUrlFactory` 用来解决后端修改 `access_token` 字段的情况. 

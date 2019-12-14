@@ -67,7 +67,7 @@ export class Request {
    *
    * @description 只支持普通get请求,和content-type = json 的 其他请求(post,put,delete,patch)
    */
-  private handleRequestOptions(options: RequestOption) {
+  private async handleRequestOptions(options: RequestOption) {
     // 请求地址处理,对于非<scene>:// 请求,附加baseUrl
     if (options.url && !/:\/\/.+?/.test(options.url)) {
       options.url = `${options.config ? options.config.baseUrl : ""}/${options.url}`.replace(/([^:])(\/\/)/g, "$1/");
@@ -94,7 +94,7 @@ export class Request {
     // 执行请求调用链
     if (options.config && options.config.transformRequest) {
       this.logger.log(LogLevel.Trace, `execute transform request list. -result\n`, options.config);
-      options.config.transformRequest.forEach(fun => fun(options));
+      for (let fun of options.config.transformRequest) await fun(options);
     }
     // debug print handled request options
     this.logger.log(LogLevel.Debug, `handled request options \n`, options);
@@ -108,7 +108,7 @@ export class Request {
    * @param {*} response
    * @memberof Request
    */
-  private handleResponse(response: ResponseOptions): Promise<ResponseOptions> {
+  private async handleResponse(response: ResponseOptions): Promise<ResponseOptions> {
     // 仅处理响应类型为JSON 返回值
     if (
       response.options.config &&
@@ -116,7 +116,7 @@ export class Request {
       response.options.config.transformResponse
     ) {
       for (let fun of response.options.config.transformResponse) {
-        let result = fun(response);
+        let result = await fun(response);
         // 这个异常处理步骤未验证.
         if (result) {
           this.logger.log(LogLevel.Trace, `execute transform request list. -result \n `, result);
