@@ -116,11 +116,12 @@ export class Request {
       response.options.config.transformResponse
     ) {
       for (let fun of response.options.config.transformResponse) {
-        let result = await fun(response);
-        // 这个异常处理步骤未验证.
-        if (result) {
-          this.logger.log(LogLevel.Trace, `execute transform request list. -result \n `, result);
-          return result;
+        try {
+          // handler response
+          await fun(response);
+        } catch (res) {
+          this.logger.log(LogLevel.Trace, `execute transform request list. -result \n `, res);
+          return res;
         }
       }
     }
@@ -139,13 +140,13 @@ export class Request {
    * @memberof Request
    */
   executeRequest(options: RequestOption): Promise<ResponseOptions> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       this.logger.log(LogLevel.Trace, `execute request -options \n`, options);
       // 合并 baseConfig
       options.config = options.config ? { ...this.config, ...options.config } : { ...this.config };
       if (this.checkAbout(options.config, reject)) return;
       // 序列化请求参数
-      this.handleRequestOptions(options);
+      await this.handleRequestOptions(options);
       if (this.checkAbout(options.config, reject)) return;
       // print fixed options
       this.logger.log(LogLevel.Debug, `fixed options \n`, options);

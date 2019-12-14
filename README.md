@@ -70,8 +70,19 @@ export const request = new signalr.Request(
     baseUrl: ``,
     timeout: 60 * 1000,
     headers: { tenantId: config.abpTenantId, "content-type": "application/json" },
-    transformRequest: [],
-    transformResponse: [],
+    transformRequest: [ // 支持 async/await
+      async (options:RequestOptions) =>{
+        options.url = `new url`;
+        // TODO ... 
+      }
+    ],
+    transformResponse: [ // 支持 async/await
+      async (response:ResponseOptions)=>{
+        // TODO 处理 response
+
+        // 如果 return Promise.reject() 或 抛出异常,则停止后续 响应处理
+      }
+    ],
     responseType: signalr.ResponseType.JSON,
     method: signalr.RequestMethod.GET
   }, 
