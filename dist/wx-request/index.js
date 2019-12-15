@@ -97,7 +97,7 @@ var Request = /** @class */ (function () {
      */
     Request.prototype.handleRequestOptions = function (options) {
         return __awaiter(this, void 0, void 0, function () {
-            var _i, _a, fun;
+            var _i, _a, fun, e_1;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -124,21 +124,27 @@ var Request = /** @class */ (function () {
                                 ? options.config.responseType
                                 : ResponseType.TEXT;
                         this.logger.log(LogLevel.Trace, "checked responseType [" + options.responseType + "]");
-                        if (!(options.config && options.config.transformRequest)) return [3 /*break*/, 4];
+                        if (!(options.config && options.config.transformRequest)) return [3 /*break*/, 6];
                         this.logger.log(LogLevel.Trace, "execute transform request list. -result\n", options.config);
                         _i = 0, _a = options.config.transformRequest;
                         _b.label = 1;
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 4];
+                        if (!(_i < _a.length)) return [3 /*break*/, 6];
                         fun = _a[_i];
-                        return [4 /*yield*/, fun(options)];
+                        _b.label = 2;
                     case 2:
-                        _b.sent();
-                        _b.label = 3;
+                        _b.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, fun(options)];
                     case 3:
+                        _b.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_1 = _b.sent();
+                        throw e_1;
+                    case 5:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 4:
+                    case 6:
                         // debug print handled request options
                         this.logger.log(LogLevel.Debug, "handled request options \n", options);
                         return [2 /*return*/];
@@ -180,7 +186,7 @@ var Request = /** @class */ (function () {
                     case 4:
                         res_1 = _b.sent();
                         this.logger.log(LogLevel.Trace, "execute transform request list. -result \n ", res_1);
-                        return [2 /*return*/, res_1];
+                        throw res_1;
                     case 5:
                         _i++;
                         return [3 /*break*/, 1];
@@ -204,7 +210,7 @@ var Request = /** @class */ (function () {
     Request.prototype.executeRequest = function (options) {
         var _this = this;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var task;
+            var error_1, task;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -214,11 +220,20 @@ var Request = /** @class */ (function () {
                         options.config = options.config ? __assign({}, this.config, options.config) : __assign({}, this.config);
                         if (this.checkAbout(options.config, reject))
                             return [2 /*return*/];
+                        _a.label = 1;
+                    case 1:
+                        _a.trys.push([1, 3, , 4]);
                         // 序列化请求参数
                         return [4 /*yield*/, this.handleRequestOptions(options)];
-                    case 1:
+                    case 2:
                         // 序列化请求参数
                         _a.sent();
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _a.sent();
+                        // 抛出异常.
+                        return [2 /*return*/, reject(__assign({ data: null, header: null, statusCode: -1, options: options }, error_1))];
+                    case 4:
                         if (this.checkAbout(options.config, reject))
                             return [2 /*return*/];
                         // print fixed options
