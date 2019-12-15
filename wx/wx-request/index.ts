@@ -94,7 +94,13 @@ export class Request {
     // 执行请求调用链
     if (options.config && options.config.transformRequest) {
       this.logger.log(LogLevel.Trace, `execute transform request list. -result\n`, options.config);
-      for (let fun of options.config.transformRequest) await fun(options);
+      for (let fun of options.config.transformRequest){
+        try{
+          await fun(options);
+        }catch(e){
+          throw e;
+        }
+      }
     }
     // debug print handled request options
     this.logger.log(LogLevel.Debug, `handled request options \n`, options);
@@ -121,7 +127,7 @@ export class Request {
           await fun(response);
         } catch (res) {
           this.logger.log(LogLevel.Trace, `execute transform request list. -result \n `, res);
-          return res;
+          throw res;
         }
       }
     }
@@ -145,8 +151,19 @@ export class Request {
       // 合并 baseConfig
       options.config = options.config ? { ...this.config, ...options.config } : { ...this.config };
       if (this.checkAbout(options.config, reject)) return;
-      // 序列化请求参数
-      await this.handleRequestOptions(options);
+      try {
+        // 序列化请求参数
+        await this.handleRequestOptions(options);
+      } catch (error) {
+        // 抛出异常.
+        return reject({
+          data:null,
+          header: null,
+          statusCode: -1,
+          options,
+          ...error
+        });
+      }
       if (this.checkAbout(options.config, reject)) return;
       // print fixed options
       this.logger.log(LogLevel.Debug, `fixed options \n`, options);
