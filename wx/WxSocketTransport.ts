@@ -36,7 +36,7 @@ export class WxSocketTransport implements ITransport {
   /** ! 超时设置 */
   public timeout: number;
   /** 监听等待时间 */
-  
+
   public delayTime: number;
   /** 重连设置 */
   public reconnect: {
@@ -160,17 +160,7 @@ export class WxSocketTransport implements ITransport {
       /** 建立连接出错处理 */
       socketTask.onError((res: WechatMiniprogram.SocketTaskOnErrorCallbackResult) => {
         this.readyState = WxSocketReadyState.CLOSED;
-        if (this.reconnect.enable && this.reconnect.val < this.reconnect.max) {
-          this.reconnect.val += 1;
-          this.connect(options)
-            .then(res => {
-              this.reconnect.val = 0;
-              resolve(res);
-            })
-            .catch(res => reject(res));
-        } else {
-          reject(res);
-        }
+        reject(res);
       });
       /** 接收到消息处理 */
       socketTask.onMessage((res: WechatMiniprogram.SocketTaskOnMessageCallbackResult) => {
