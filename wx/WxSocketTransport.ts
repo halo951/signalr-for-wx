@@ -36,6 +36,7 @@ export class WxSocketTransport implements ITransport {
   /** ! 超时设置 */
   public timeout: number;
   /** 监听等待时间 */
+  
   public delayTime: number;
   /** 重连设置 */
   public reconnect: {
@@ -251,13 +252,7 @@ export class WxSocketTransport implements ITransport {
     WxSocketTransport.count = WxSocketTransport.count > 0 ? WxSocketTransport.count - 1 : 0;
     if (this.onclose) {
       if (res && res.code !== 1000) {
-        // ! 异常断开加入,默认的重连逻辑,如果不想用的话,需要重新实现 WxSocketTransport
-        if (this.reconnect.enable) {
-          // 尝试重连
-          this.connect(this.connectOptions);
-        } else {
-          this.onclose(new Error(`WebSocket closed with status code: ${res.code} (${res.reason}).`));
-        }
+        this.onclose(new Error(`WebSocket closed with status code: ${res.code} (${res.reason}).`));
       } else {
         this.onclose();
       }

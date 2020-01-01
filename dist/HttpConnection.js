@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 import { LogLevel } from "./ILogger";
-import { HttpTransportType, TransferFormat } from './ITransport';
+import { HttpTransportType, TransferFormat } from "./ITransport";
 import { LongPollingTransport } from "./LongPollingTransport";
 import { Arg, createLogger } from "./Utils";
 import DefaultRequest from "./DefualtRequest";
@@ -74,7 +74,7 @@ var HttpConnection = /** @class */ (function () {
         Arg.isIn(transferFormat, TransferFormat, "transferFormat");
         this.logger.log(LogLevel.Debug, "Starting connection with transfer format '" + TransferFormat[transferFormat] + "'.", TransferFormat);
         if (this.connectionState !== 2 /* Disconnected */) {
-            return Promise.reject(new Error("Cannot start a connection that is not in the 'Disconnected' state."));
+            return Promise.reject(new Error("Cannot start a connection that is not in the 'Disconnected' state. state is " + this.connectionState));
         }
         this.connectionState = 0 /* Connecting */;
         this.startPromise = this.startInternal(transferFormat);
@@ -352,39 +352,43 @@ var HttpConnection = /** @class */ (function () {
                     return WxSocket;
                 }
                 else {
-                    return new WxSocket(wxSocketTransportOptions ? wxSocketTransportOptions : {
-                        // token 工厂
-                        accessTokenFactory: this.accessTokenFactory,
-                        // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
-                        socketUrlFactory: this.socketUrlFactory,
-                        // logger
-                        logger: this.logger,
-                        logMessageContent: this.options.logMessageContent || false,
-                        /** 是否允许替换socket连接
-                         *
-                         * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
-                         */
-                        allowReplaceSocket: true,
-                        /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
-                        enableMessageQueue: this.options.enableMessageQueue == undefined ? true : this.options.enableMessageQueue,
-                        /** 重连设置 */
-                        reconnect: {
-                            enable: true,
-                            max: 3
-                        }
-                    });
+                    return new WxSocket(wxSocketTransportOptions
+                        ? wxSocketTransportOptions
+                        : {
+                            // token 工厂
+                            accessTokenFactory: this.accessTokenFactory,
+                            // socket 单独实现一个socket url factory(用于后端改了 accecc_token 参数名的场景)
+                            socketUrlFactory: this.socketUrlFactory,
+                            // logger
+                            logger: this.logger,
+                            logMessageContent: this.options.logMessageContent || false,
+                            /** 是否允许替换socket连接
+                             *
+                             * 小程序 版本 < 1.7.0 时, 最多允许存在一个socket连接, 此参数用于是否允许在这个情况下,替换这个打开的socket
+                             */
+                            allowReplaceSocket: true,
+                            /** 是否启用消息队列缓存连接建立前消息,并在建立连接后发送 */
+                            enableMessageQueue: this.options.enableMessageQueue == undefined ? true : this.options.enableMessageQueue,
+                            /** 重连设置 */
+                            reconnect: {
+                                enable: true,
+                                max: 3
+                            }
+                        });
                 }
             case HttpTransportType.LongPolling: // 长轮询方式
                 if (LongPolling instanceof LongPollingTransport) {
                     return LongPolling;
                 }
                 else {
-                    return new LongPolling(longPollingTransportOptions ? longPollingTransportOptions : {
-                        request: this.request,
-                        accessTokenFactory: this.accessTokenFactory,
-                        logger: this.logger,
-                        logMessageContent: this.options.logMessageContent || false
-                    });
+                    return new LongPolling(longPollingTransportOptions
+                        ? longPollingTransportOptions
+                        : {
+                            request: this.request,
+                            accessTokenFactory: this.accessTokenFactory,
+                            logger: this.logger,
+                            logMessageContent: this.options.logMessageContent || false
+                        });
                 }
             default:
                 throw new Error("Unknown transport: " + transport + ".");
@@ -399,7 +403,7 @@ var HttpConnection = /** @class */ (function () {
             var transferFormats = endpoint.transferFormats.map(function (s) { return TransferFormat[s]; });
             if (transportMatches(requestedTransport, transport)) {
                 if (transferFormats.indexOf(requestedTransferFormat) >= 0) {
-                    if ((transport === HttpTransportType.WebSockets && !this.options.WxSocket)) {
+                    if (transport === HttpTransportType.WebSockets && !this.options.WxSocket) {
                         this.logger.log(LogLevel.Debug, "Skipping transport '" + HttpTransportType[transport] + "' because it is not supported in your environment.'");
                     }
                     else {
