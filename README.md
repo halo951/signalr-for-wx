@@ -47,8 +47,14 @@ this.socket = new signalr.HubConnectionBuilder()
 // invoke 具体看官方示例
 this.socket.invoke('mothod name',(...args)=>{});
 
-// on
+// 事件绑定/解绑 on|off
 this.socket.on('message event name',(...args) => {});
+
+this.socket.off('message event name');
+
+// 新增绑定唯一事件
+this.socket.on(`message event name`,(...args)=> {/* callback */} , true);
+
 
 // onclose
 
@@ -129,6 +135,10 @@ export const request = new signalr.Request(
 ├ [./typings](./typings) 导出的 ts .d.ts\n
 
 #### version
+- 2020年1月1日 22:37:11
+  1. 新增 on() 绑定唯一事件, use: `socket.on('event',()=>{/* callback*/},true);`
+    - 改动位置:[code link](./wx/HubConnection.ts#L278)
+
 - 2019年12月14日 12:37:39
  1. 补充更新 wx-request 对 transform 方法增加 async/await 支持.
 - 2019年12月13日 23:03:01

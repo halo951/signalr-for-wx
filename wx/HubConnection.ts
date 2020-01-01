@@ -279,13 +279,20 @@ export class HubConnection {
    *
    * @param {string} methodName The name of the hub method to define.
    * @param {Function} newMethod The handler that will be raised when the hub method is invoked.
+   * @param {Boolean} only 绑定唯一事件
+   * @description 在原版事件绑定上新增唯一事件
    */
-  public on(methodName: string, newMethod: (...args: any[]) => void) {
+  public on(methodName: string, newMethod: (...args: any[]) => void): void;
+  public on(methodName: string, newMethod: (...args: any[]) => void, only?: boolean) {
     if (!methodName || !newMethod) {
       return;
     }
 
     methodName = methodName.toLowerCase();
+    if (only) {
+      this.methods[methodName] = [newMethod];
+      return;
+    }
     if (!this.methods[methodName]) {
       this.methods[methodName] = [];
     }
@@ -464,7 +471,12 @@ export class HubConnection {
   private invokeClientMethod(invocationMessage: InvocationMessage) {
     const methods = this.methods[invocationMessage.target.toLowerCase()];
     if (methods) {
-      methods.forEach(m => m.apply(this, invocationMessage.arguments));
+      try {
+        // Time:2020年1月1日 22:30:30 增加一个 try cache, 获取 signalr 在特定场景下,处理事件失败会关闭问题.
+        methods.forEach(m => m.apply(this, invocationMessage.arguments));
+      } catch (error) {
+        console.error(error);
+      }
       if (invocationMessage.invocationId) {
         // This is not supported in v1. So we return an error to avoid blocking the server waiting for the response.
         const message = "Server requested a response, which is not supported in this version of the client.";
