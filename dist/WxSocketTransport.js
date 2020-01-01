@@ -188,18 +188,7 @@ var WxSocketTransport = /** @class */ (function () {
                             /** 建立连接出错处理 */
                             socketTask.onError(function (res) {
                                 _this.readyState = WxSocketReadyState.CLOSED;
-                                if (_this.reconnect.enable && _this.reconnect.val < _this.reconnect.max) {
-                                    _this.reconnect.val += 1;
-                                    _this.connect(options)
-                                        .then(function (res) {
-                                        _this.reconnect.val = 0;
-                                        resolve(res);
-                                    })
-                                        .catch(function (res) { return reject(res); });
-                                }
-                                else {
-                                    reject(res);
-                                }
+                                reject(res);
                             });
                             /** 接收到消息处理 */
                             socketTask.onMessage(function (res) {
