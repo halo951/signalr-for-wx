@@ -39,6 +39,7 @@ import { HandshakeProtocol } from "./HandshakeProtocol";
 import { MessageType } from "./IHubProtocol";
 import { LogLevel } from "./ILogger";
 import { Arg, Subject } from "./Utils";
+import { EventNotFoundError } from "./Errors";
 var DEFAULT_TIMEOUT_IN_MS = 30 * 1000;
 var DEFAULT_PING_INTERVAL_IN_MS = 15 * 1000;
 /** Describes the current state of the {@link HubConnection} to the server. */
@@ -309,6 +310,11 @@ var HubConnection = /** @class */ (function () {
             this.closedCallbacks.push(callback);
         }
     };
+    HubConnection.prototype.onEventNotFound = function (callback) {
+        if (callback) {
+            this.eventNotFoundCallback = callback;
+        }
+    };
     HubConnection.prototype.processIncomingData = function (data) {
         this.cleanupTimeout();
         if (!this.receivedHandshakeResponse) {
@@ -445,7 +451,10 @@ var HubConnection = /** @class */ (function () {
             }
         }
         else {
-            this.logger.log(LogLevel.Warning, "No client method with the name '" + invocationMessage.target + "' found.");
+            var message = "No client method with the name '" + invocationMessage.target + "' found.";
+            this.logger.log(LogLevel.Warning, message);
+            this.logger.log(LogLevel.Information, "Current Event Methods:" + Object.keys(this.methods));
+            this.eventNotFound(new EventNotFoundError(invocationMessage, message));
         }
     };
     HubConnection.prototype.connectionClosed = function (error) {
@@ -465,6 +474,26 @@ var HubConnection = /** @class */ (function () {
         this.cleanupTimeout();
         this.cleanupPingTimer();
         this.closedCallbacks.forEach(function (c) { return c.apply(_this, [error]); });
+    };
+    HubConnection.prototype.eventNotFound = function (error) {
+        return __awaiter(this, void 0, void 0, function () {
+            var r;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!this.eventNotFoundCallback) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.eventNotFoundCallback(error)];
+                    case 1:
+                        r = _a.sent();
+                        if (r === true) {
+                            this.logger.log(LogLevel.Information, "retry invoke local message callback.");
+                            this.invokeClientMethod(error.invocationMessage);
+                        }
+                        _a.label = 2;
+                    case 2: return [2 /*return*/];
+                }
+            });
+        });
     };
     HubConnection.prototype.cleanupPingTimer = function () {
         if (this.pingServerHandle) {

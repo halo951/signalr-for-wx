@@ -15,6 +15,7 @@ import {
 import { ILogger, LogLevel } from "./ILogger";
 import { IStreamResult } from "./Stream";
 import { Arg, Subject } from "./Utils";
+import { EventNotFoundError } from "./Errors";
 
 const DEFAULT_TIMEOUT_IN_MS: number = 30 * 1000;
 const DEFAULT_PING_INTERVAL_IN_MS: number = 15 * 1000;
@@ -41,6 +42,7 @@ export class HubConnection {
   private id: number;
   private closedCallbacks: Array<(error?: Error) => void>;
   private receivedHandshakeResponse: boolean;
+  private eventNotFoundCallback: (error?: EventNotFoundError) => boolean | void;
   private handshakeResolver!: (value?: PromiseLike<{}>) => void;
   private handshakeRejecter!: (reason?: any) => void;
   private connectionState: HubConnectionState;
@@ -352,7 +354,11 @@ export class HubConnection {
       this.closedCallbacks.push(callback);
     }
   }
-
+  public onEventNotFound(callback: (callback: EventNotFoundError) => boolean | void) {
+    if (callback) {
+      this.eventNotFoundCallback = callback;
+    }
+  }
   private processIncomingData(data: any) {
     this.cleanupTimeout();
 
@@ -487,10 +493,12 @@ export class HubConnection {
         this.connection.stop(new Error(message));
       }
     } else {
-      this.logger.log(LogLevel.Warning, `No client method with the name '${invocationMessage.target}' found.`);
+      let message = `No client method with the name '${invocationMessage.target}' found.`;
+      this.logger.log(LogLevel.Warning, message);
+      this.logger.log(LogLevel.Information, `Current Event Methods:${Object.keys(this.methods)}`);
+      this.eventNotFound(new EventNotFoundError(invocationMessage, message));
     }
   }
-
   private connectionClosed(error?: Error) {
     const callbacks = this.callbacks;
     this.callbacks = {};
@@ -512,6 +520,17 @@ export class HubConnection {
     this.cleanupPingTimer();
 
     this.closedCallbacks.forEach(c => c.apply(this, [error]));
+  }
+
+  public async eventNotFound(error?: EventNotFoundError) {
+    if (this.eventNotFoundCallback) {
+      // # 如果返回值是true的话,尝试重新调用invoke
+      let r = await this.eventNotFoundCallback(error);
+      if (r === true) {
+        this.logger.log(LogLevel.Information, `retry invoke local message callback.`);
+        this.invokeClientMethod(error.invocationMessage);
+      }
+    }
   }
 
   private cleanupPingTimer(): void {

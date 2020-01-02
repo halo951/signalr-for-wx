@@ -260,14 +260,14 @@ var WxSocketTransport = /** @class */ (function () {
         });
     };
     /** 停止 */
-    WxSocketTransport.prototype.stop = function () {
+    WxSocketTransport.prototype.stop = function (msg) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             if (_this.socketTask) {
                 _this.socketTask.close({
                     code: 1000,
                     reason: "stop socket",
-                    success: function (res) { return resolve(res); },
+                    success: function (res) { return resolve(msg || res); },
                     fail: function (res) { return reject(res); }
                 });
             }

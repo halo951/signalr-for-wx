@@ -220,13 +220,13 @@ export class WxSocketTransport implements ITransport {
   }
 
   /** 停止 */
-  public stop(): Promise<WechatMiniprogram.GeneralCallbackResult> {
+  public stop(msg?): Promise<WechatMiniprogram.GeneralCallbackResult> {
     return new Promise((resolve, reject) => {
       if (this.socketTask) {
         this.socketTask.close({
           code: 1000,
           reason: `stop socket`,
-          success: res => resolve(res),
+          success: res => resolve(msg || res),
           fail: res => reject(res)
         });
       }

@@ -1,5 +1,3 @@
-// 版权所有（c）.NET基金会。保留所有权利。
-// 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -13,6 +11,8 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+// 版权所有（c）.NET基金会。保留所有权利。
+// 在2.0版Apache许可下授权。有关许可证信息，请参见项目根目录中的License.txt。
 /**
  * Error thrown when an HTTP request fails.
  * HTTP请求失败时引发错误。
@@ -86,3 +86,29 @@ var AbortError = /** @class */ (function (_super) {
     return AbortError;
 }(Error));
 export { AbortError };
+/**
+ * Error thrown when message event is not found.
+ * 事件未定义
+ */
+var EventNotFoundError = /** @class */ (function (_super) {
+    __extends(EventNotFoundError, _super);
+    /** Constructs a new instance of {@link AbortError}.
+     *
+     * @param {string} errorMessage A descriptive error message.
+     */
+    function EventNotFoundError(invocationMessage, errorMessage) {
+        var _newTarget = this.constructor;
+        if (errorMessage === void 0) { errorMessage = "message event not found."; }
+        var _this = this;
+        var trueProto = _newTarget.prototype;
+        _this = _super.call(this, errorMessage) || this;
+        _this.methodName = invocationMessage.target;
+        _this.invocationMessage = invocationMessage;
+        // Workaround issue in Typescript compiler
+        // https://github.com/Microsoft/TypeScript/issues/13965#issuecomment-278570200
+        _this.__proto__ = trueProto;
+        return _this;
+    }
+    return EventNotFoundError;
+}(Error));
+export { EventNotFoundError };
